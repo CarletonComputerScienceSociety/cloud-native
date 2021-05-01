@@ -2,7 +2,7 @@
 
 # The namespace this chart will be installed to,
 # if not specified the chart will be installed to "default"
-namespace: gitpod
+defaultNamespace: gitpod
 
 # Custom helm options
 helm:
