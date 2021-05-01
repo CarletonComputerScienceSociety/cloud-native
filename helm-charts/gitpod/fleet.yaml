@@ -31,4 +31,4 @@ helm:
   values:
     minio:
       accessKey: "asdasdasd"
-      secretKey: "123123123"
+      secretKey: "qweqweqwe"
