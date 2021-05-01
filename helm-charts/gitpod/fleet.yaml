@@ -1,0 +1,5 @@
+defaultNamespace: gitpod
+helm:
+  releaseName: rancher-monitoring
+  repo: https://charts.gitpod.io/
+  chart: gitpod
