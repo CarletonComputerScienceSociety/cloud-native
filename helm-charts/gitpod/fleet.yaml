@@ -30,5 +30,5 @@ helm:
   # Custom values that will be passed as values.yaml to the installation
   values:
     minio:
-      accessKey: asdasdasd
-      secretKey: 123123123
+      accessKey: "asdasdasd"
+      secretKey: "123123123"
