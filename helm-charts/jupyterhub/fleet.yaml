@@ -38,13 +38,6 @@ helm:
     ingress:
       enabled: true
       hosts:
-        - jhub.discretemath.ca
-        - localhost
-      rules:
-      - host: localhost
-        http:
-          paths:
-          - path: /jhub
-            pathType: Prefix
+        - jupyter.discretemath.ca
     custom:
       a: b
