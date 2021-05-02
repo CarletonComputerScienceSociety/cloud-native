@@ -2,12 +2,12 @@
 
 # The namespace this chart will be installed to,
 # if not specified the chart will be installed to "default"
-defaultNamespace: jupyterhub
+defaultNamespace: jhub
 
 # Custom helm options
 helm:
   # The release name to use. If empty a generated release name will be used
-  releaseName: jupyterhub
+  releaseName: jhub
 
   # The directory of the chart in the repo.  Also any valid go-getter supported
   # URL can be used there is specify where to download the chart from.
