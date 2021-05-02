@@ -28,12 +28,4 @@ helm:
   timeoutSeconds: 0
 
   # Custom values that will be passed as values.yaml to the installation
-  values:
-    proxy:
-      secretToken: "ae610162bcbdf3024d0c2d70d77d4601ab71fb837589bcbf1436826283f8772b"
-    singleuser:
-      defaultUrl: "/lab"
-    ingress:
-      enabled: true
-      hosts:
-        - jhub.discretemath.ca
+  # values:
