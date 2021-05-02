@@ -1,69 +1,69 @@
-# This file and all contents in it are OPTIONAL.
+# # This file and all contents in it are OPTIONAL.
 
-# The namespace this chart will be installed to,
-# if not specified the chart will be installed to "default"
-defaultNamespace: gitpod
+# # The namespace this chart will be installed to,
+# # if not specified the chart will be installed to "default"
+# defaultNamespace: gitpod
 
-# Custom helm options
-helm:
-  # The release name to use. If empty a generated release name will be used
-  releaseName: gitpod
+# # Custom helm options
+# helm:
+#   # The release name to use. If empty a generated release name will be used
+#   releaseName: gitpod
 
-  # The directory of the chart in the repo.  Also any valid go-getter supported
-  # URL can be used there is specify where to download the chart from.
-  # If repo below is set this value if the chart name in the repo
-  chart: "gitpod"
+#   # The directory of the chart in the repo.  Also any valid go-getter supported
+#   # URL can be used there is specify where to download the chart from.
+#   # If repo below is set this value if the chart name in the repo
+#   chart: "gitpod"
 
-  # An https to a valid Helm repository to download the chart from
-  repo: "https://charts.gitpod.io"
+#   # An https to a valid Helm repository to download the chart from
+#   repo: "https://charts.gitpod.io"
 
-  # Used if repo is set to look up the version of the chart
-  version: "0.8.0"
+#   # Used if repo is set to look up the version of the chart
+#   version: "0.8.0"
 
-  # Force recreate resource that can not be updated
-  force: false
+#   # Force recreate resource that can not be updated
+#   force: false
 
-  # How long for helm to wait for the release to be active. If the value
-  # is less that or equal to zero, we will not wait in Helm
-  timeoutSeconds: 0
+#   # How long for helm to wait for the release to be active. If the value
+#   # is less that or equal to zero, we will not wait in Helm
+#   timeoutSeconds: 0
 
-  # Custom values that will be passed as values.yaml to the installation
-  values:
-    minio:
-      accessKey: "asdasdasd"
-      secretKey: "qweqweqwe"
-    components:
-      imageBuilder:
-        registry:
-          # By default, the builtin registry is accessed through the proxy.
-          # If bypassProxy is true, the builtin registry is accessed via <registry-name>.<namespace>.svc.cluster.local directly.
-          bypassProxy: true
-      proxy:
-        # name: "proxy"
-        # svcName: "proxy"
-        # replicas: 1
-        # dependsOn:
-        # - "proxy-configmap-nginx.yaml"
-        # - "server-proxy-apikey-secret.yaml"
-        # - "server-proxy-ssl-dhparam.yaml"
-        ports:
-          http:
-            expose: true
-            containerPort: 80
-            nodePort: 31080
-          https:
-            expose: true
-            containerPort: 443
-            nodePort: 31443
-        # loadBalancerIP: null
-        # serviceType: "LoadBalancer"
-        # serviceSessionAffinity: "None"
-        # serviceExternalTrafficPolicy: null
-        # deployIngressService: true
-        # certbot:
-        #   enabled: false
-        #   email: "certificate@your-domain.com"
-        # # A base64ed Diffie-Hellman parameter
-        # # This can be generated with: openssl dhparam 4096 2> /dev/null | base64 -w 0
-        # # http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
-        # sslDHParam:
+#   # Custom values that will be passed as values.yaml to the installation
+#   values:
+#     minio:
+#       accessKey: "asdasdasd"
+#       secretKey: "qweqweqwe"
+#     components:
+#       imageBuilder:
+#         registry:
+#           # By default, the builtin registry is accessed through the proxy.
+#           # If bypassProxy is true, the builtin registry is accessed via <registry-name>.<namespace>.svc.cluster.local directly.
+#           bypassProxy: true
+#       proxy:
+#         # name: "proxy"
+#         # svcName: "proxy"
+#         # replicas: 1
+#         # dependsOn:
+#         # - "proxy-configmap-nginx.yaml"
+#         # - "server-proxy-apikey-secret.yaml"
+#         # - "server-proxy-ssl-dhparam.yaml"
+#         ports:
+#           http:
+#             expose: true
+#             containerPort: 80
+#             nodePort: 31080
+#           https:
+#             expose: true
+#             containerPort: 443
+#             nodePort: 31443
+#         # loadBalancerIP: null
+#         # serviceType: "LoadBalancer"
+#         # serviceSessionAffinity: "None"
+#         # serviceExternalTrafficPolicy: null
+#         # deployIngressService: true
+#         # certbot:
+#         #   enabled: false
+#         #   email: "certificate@your-domain.com"
+#         # # A base64ed Diffie-Hellman parameter
+#         # # This can be generated with: openssl dhparam 4096 2> /dev/null | base64 -w 0
+#         # # http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+#         # sslDHParam:
