@@ -44,7 +44,7 @@ helm:
       - host: localhost
         http:
           paths:
-          - path: /
+          - path: /jhub
             pathType: Prefix
     custom:
       a: b
