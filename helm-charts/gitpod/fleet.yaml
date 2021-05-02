@@ -38,6 +38,32 @@ helm:
           # By default, the builtin registry is accessed through the proxy.
           # If bypassProxy is true, the builtin registry is accessed via <registry-name>.<namespace>.svc.cluster.local directly.
           bypassProxy: true
-
-
-
+      proxy:
+        # name: "proxy"
+        # svcName: "proxy"
+        # replicas: 1
+        # dependsOn:
+        # - "proxy-configmap-nginx.yaml"
+        # - "server-proxy-apikey-secret.yaml"
+        # - "server-proxy-ssl-dhparam.yaml"
+        ports:
+          http:
+            expose: true
+            containerPort: 80
+            nodePort: 31080
+          https:
+            expose: true
+            containerPort: 443
+            nodePort: 31443
+        # loadBalancerIP: null
+        # serviceType: "LoadBalancer"
+        # serviceSessionAffinity: "None"
+        # serviceExternalTrafficPolicy: null
+        # deployIngressService: true
+        # certbot:
+        #   enabled: false
+        #   email: "certificate@your-domain.com"
+        # # A base64ed Diffie-Hellman parameter
+        # # This can be generated with: openssl dhparam 4096 2> /dev/null | base64 -w 0
+        # # http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+        # sslDHParam:
