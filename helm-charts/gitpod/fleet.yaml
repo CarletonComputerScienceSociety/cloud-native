@@ -32,3 +32,12 @@ helm:
     minio:
       accessKey: "asdasdasd"
       secretKey: "qweqweqwe"
+    components:
+      imageBuilder:
+        registry:
+          # By default, the builtin registry is accessed through the proxy.
+          # If bypassProxy is true, the builtin registry is accessed via <registry-name>.<namespace>.svc.cluster.local directly.
+          bypassProxy: true
+
+
+
