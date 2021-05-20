@@ -50,6 +50,13 @@
 
   - debug: msg="{{ df.stdout }}"
 
+- name: Install Docker
+  hosts: servers
+  become: yes
+  remote_user: student
+  roles:
+    - role: geerlingguy.docker
+
 - name: Assemble Consul cluster
   hosts: consul_instances
   any_errors_fatal: true
@@ -72,20 +79,19 @@
     nomad_use_consul: true
     nomad_datacenter: SCS
     nomad_bind_address: 0.0.0.0
-    nomad_podman_enable: true
     nomad_docker_enable: true
     nomad_bootstrap_expect: 3
   tasks:
     - name: Start nomad
       service: name=nomad state=started enabled=yes
 
-# - hosts: all
-#   remote_user: student
-#   become: true
+- hosts: all
+  remote_user: student
+  become: true
   
-#   tasks:
-#     - name: Change user password
-#       user:
-#         name: student
-#         update_password: always
-#         password: "{{ 'newpassword'|password_hash('sha512') }}"
+  tasks:
+    - name: Change user password
+      user:
+        name: student
+        update_password: always
+        password: "{{ 'newpassword'|password_hash('sha512') }}"
