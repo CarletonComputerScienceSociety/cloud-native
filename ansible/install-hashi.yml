@@ -1,0 +1,21 @@
+---
+# File: site.yml - Example nomad site playbook
+
+- name: Installing Nomad
+  hosts: nomad_instances
+  become: yes
+  remote_user: student
+  roles:
+    - role: ansible-nomad
+  vars:
+    - nomad_version: 1.0.4
+    - nomad_user: student
+    - nomad_datacenter: SCS
+    - nomad_node_role: server
+    - nomad_podman_enable: true
+    - nomad_docker_enable: true
+    - nomad_use_consul: true
+
+  tasks:
+    - name: Start nomad
+      service: name=nomad state=started enabled=yes

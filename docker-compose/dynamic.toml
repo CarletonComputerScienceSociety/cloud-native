@@ -1,0 +1,23 @@
+[http]
+  [http.routers]
+    [http.routers.woa-ctf]
+      rule = "Host(`scoreboard.discretemath.ca`) || Host(`scoreboard.h4tt.ca`)"
+      entryPoints = ["https"]
+      service = "woa-ctf"
+      [http.routers.woa-ctf.tls]
+        certresolver = "letsencrypt"
+
+    [http.routers.http-catchall]
+      rule = "hostregexp(`{host:.+}`)"
+      entryPoints = ["http"]
+      service = "woa-ctf"
+      middlewares = ["redirect-to-https"]
+
+  [http.middlewares]
+    [http.middlewares.redirect-to-https.redirectscheme]
+      scheme = "https"
+
+  [http.services]
+    [http.services.woa-ctf]
+      [[http.services.woa-ctf.loadBalancer.servers]]
+        url = "http://192.168.30.132:8000/"

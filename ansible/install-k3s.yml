@@ -1,0 +1,65 @@
+---
+# File: site.yml - Example nomad site playbook
+
+- name: Update Ubuntu
+  hosts: k3s_instances
+  remote_user: student
+  become: true
+  tasks:
+    # - name: Upgrade all apt packages
+    #   apt: upgrade=dist force_apt_get=yes
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+- name: Install Docker
+  hosts: k3s_instances
+  become: yes
+  remote_user: student
+  roles:
+    - role: ansible-role-docker
+
+- name: Installing k3s
+  hosts: k3s_server
+  become: yes
+  remote_user: student
+  roles:
+    - role: ansible-role-k3s
+  vars:
+    k3s_registration_address: loadbalancer
+    k3s_state: installed
+    k3s_control_node: true
+    k3s_etcd_datastore: true
+    k3s_server:
+      docker: false
+      cluster-cidr: 172.20.0.0/16
+      flannel-backend: 'none'  # This needs to be in quotes
+
+- name: Installing k3s
+  hosts: k3s_server
+  become: yes
+  remote_user: student
+  roles:
+    - role: ansible-role-k3s
+  vars:
+    k3s_registration_address: loadbalancer
+    k3s_state: installed
+    k3s_control_node: true
+    k3s_etcd_datastore: true
+    k3s_server:
+      docker: true
+      cluster-cidr: 172.20.0.0/16
+      flannel-backend: 'none'  # This needs to be in quotes
+
+
+- name: Installing k3s
+  hosts: k3s_client
+  become: yes
+  remote_user: student
+  roles:
+    - role: ansible-role-k3s
+  vars:
+    k3s_state: installed
+    k3s_client:
+      with-node-id: true

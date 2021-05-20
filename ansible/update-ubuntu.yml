@@ -1,0 +1,12 @@
+---
+- hosts: k3s_instances
+  remote_user: student
+  become: true
+
+  tasks:
+    # - name: Upgrade all apt packages
+    #   apt: upgrade=dist force_apt_get=yes
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes

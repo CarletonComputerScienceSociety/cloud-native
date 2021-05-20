@@ -1,0 +1,236 @@
+version: "3.4"
+
+services:
+  ##################
+  # REVERSE PROXY
+  ##################
+
+  traefik:
+    image: "traefik:v2.2"
+    container_name: "traefik"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./logs:/logs"
+      - "./traefik.toml:/etc/traefik/traefik.toml"
+      - "./dynamic.toml:/etc/traefik/config/dynamic.toml"
+
+  ##################
+  # STUDY CENTER
+  ##################
+
+  studycenter-client:
+    image: studycenter-client
+    restart: unless-stopped
+    container_name: "studycenter-client-service"
+    ports:
+      - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.studycenter-client.rule=Host(`discretemath.ca`)"
+      - "traefik.http.routers.studycenter-client.entrypoints=https"
+      - "traefik.http.routers.studycenter-client.tls.certresolver=letsencrypt"
+
+  studycenter-backend:
+    image: "studycenter-api"
+    restart: unless-stopped
+    container_name: "studycenter-backend-service"
+    command: |
+      bash -c "rm -f tmp/pids/server.pid \
+        && bundle exec rails db:drop \
+        && bundle exec rails db:create \
+        && bundle exec rails db:migrate \
+        && bundle exec rails db:seed \
+        && bundle exec rails s -p 3001 -b '0.0.0.0'"
+    ports:
+      - "3001"
+    depends_on:
+      - studycenter-db
+      - studycenter-redis
+    links:
+      - studycenter-db
+      - studycenter-redis
+    networks:
+      - studycenter
+      - default
+    environment:
+      REDIS_URL: "redis://studycenter-redis:6379"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=default"
+      - "traefik.http.routers.studycenter-backend.rule=Host(`api.discretemath.ca`)"
+      - "traefik.http.routers.studycenter-backend.entrypoints=https"
+      - "traefik.http.routers.studycenter-backend.tls.certresolver=letsencrypt"
+
+  studycenter-redis:
+    image: "redis:alpine"
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - studycenter
+    labels:
+      - "traefik.enable=false"
+
+  studycenter-db:
+    image: postgres:12-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - studycenter_db:/var/lib/postgresql/data
+    networks:
+      - studycenter
+    labels:
+      - "traefik.enable=false"
+
+  ##################
+  # CODE CHALLENGE
+  ##################
+
+  # code-challenge-phoenix-backend:
+  #   image: "code-challenge-phoenix"
+  #   container_name: "code-challenge-service"
+  #   ports:
+  #     - "4444"
+  #   networks:
+  #     - default
+  #   volumes:
+  #     - ./git/code-challenge-api:/app
+  #   depends_on:
+  #     - code-challenge-phoenix-db
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.code-challenge.rule=Host(`puzzle.discretemath.ca`)"
+  #     - "traefik.http.routers.code-challenge.entrypoints=https"
+  #     - "traefik.http.routers.code-challenge.tls.certresolver=letsencrypt"
+
+  # code-challenge-phoenix-db:
+  #   image: postgres:12-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: 1234
+  #   networks:
+  #     - default
+  #   labels:
+  #     - "traefik.enable=false"
+  #   volumes:
+  #     - code_challenge_db:/var/lib/postgresql/data
+
+  ##################
+  # OTHER SERVICES
+  ##################
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: "z6Ya9EF944FCiBFHrw5PEtbTlxoRZopnnkRGh"
+    restart: unless-stopped
+    networks:
+      - studycenter
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pg.discretemath.ca`)"
+      - "traefik.http.routers.pgadmin.entrypoints=https"
+      - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
+
+  portainer:
+    image: portainer/portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.discretemath.ca`)"
+      - "traefik.http.routers.portainer.entrypoints=https"
+      - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
+
+  grafana:
+    image: grafana/grafana:7.1.0
+    ports:
+      - 3000
+    user: "104"
+    restart: unless-stopped
+    volumes:
+      - grafana_storage:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.discretemath.ca`)"
+      - "traefik.http.routers.grafana.entrypoints=https"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+
+  cors-anywhere:
+    image: redocly/cors-anywhere
+    restart: unless-stopped
+    ports:
+      - 8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cors-anywhere.rule=Host(`cors.discretemath.ca`)"
+      - "traefik.http.routers.cors-anywhere.entrypoints=https"
+      - "traefik.http.routers.cors-anywhere.tls.certresolver=letsencrypt"
+
+  # prometheus:
+  #   image: prom/prometheus
+  #   restart: unless-stopped
+  #   ports:
+  #     - 3000
+  #   labels:
+  #     ai.ix.fqdn: 'prometheus.${DOMAIN?err}'
+  #     traefik.enable: 'true'
+  #     traefik.http.routers.prometheus.entrypoints: https
+  #     traefik.http.services.prometheus.loadbalancer.server.port: '9090'
+  #     traefik.http.routers.prometheus.entrypoints: https
+  #     traefik.http.routers.prometheus.tls.certresolver: letsencrypt
+  #   secrets:
+  #     - prometheus.yml
+  #   volumes:
+  #     - './folders/prometheus:/data:rw'
+  #   user: '99:99'
+  #   ulimits:
+  #     nofile:
+  #       soft: 200000
+  #       hard: 200000
+  #   command: |
+  #       --config.file=/run/secrets/prometheus.yml
+  #       --web.enable-admin-api
+  #       --web.external-url=https://prometheus.${DOMAIN?err}
+  #       --storage.tsdb.path=/data
+  #       --storage.tsdb.retention.time=30d
+
+volumes:
+  studycenter_db:
+  portainer_data:
+  grafana_storage:
+  code_challenge_db:
+
+networks:
+  studycenter:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.124.0/24
+  default:
+    ipam:
+      config:
+        - subnet: 192.168.125.0/24
