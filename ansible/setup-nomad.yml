@@ -1,0 +1,68 @@
+# ---
+# - hosts: servers
+#   remote_user: student
+#   become: true
+#   tasks:
+#     - name: Update apt repo and cache on all Debian/Ubuntu boxes
+#       apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+#     - name: Upgrade all packages on servers
+#       apt: upgrade=dist force_apt_get=yes
+
+#     - name: Check if a reboot is needed on all servers
+#       register: reboot_required_file
+#       stat: path=/var/run/reboot-required get_md5=no
+
+#     - name: Reboot the box if kernel updated
+#       reboot:
+#         msg: "Reboot initiated by Ansible for kernel updates"
+#         connect_timeout: 5
+#         reboot_timeout: 300
+#         pre_reboot_delay: 0
+#         post_reboot_delay: 30
+#         test_command: uptime
+#       when: reboot_required_file.stat.exists
+
+- name: Check sizes
+  shell: |
+    df
+  args:
+    executable: /bin/bash
+
+# - name: Expand partition
+#   shell: |
+#     cd /home/student/extend-lvm
+#     sudo ./extend-lvm.sh /dev/vda
+#   args:
+#     executable: /bin/bash
+
+
+# - name: Assemble Consul cluster
+#   hosts: consul_instances
+#   any_errors_fatal: true
+#   remote_user: student
+#   become: true
+#   roles:
+#     - ansible-consul
+#   vars:
+#     consul_version: 1.9.5
+
+# - name: Installing Nomad
+#   hosts: nomad_instances
+#   remote_user: student
+#   become: true
+#   roles:
+#     - ansible-nomad
+#   vars:
+#     nomad_encrypt_enable: true
+#     nomad_version: 1.1.0
+#     nomad_use_consul: true
+#     nomad_datacenter: SCS
+#     nomad_bind_address: 0.0.0.0
+#     nomad_iface: "eth0"
+#     nomad_podman_enable: true
+#     nomad_docker_enable: true
+#     nomad_bootstrap_expect: 3
+#   tasks:
+#     - name: Start nomad
+#       service: name=nomad state=started enabled=yes

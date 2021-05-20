@@ -1,0 +1,28 @@
+## set up ssh user name and path to python3 ##
+[all:vars]
+ansible_user='student'
+ansible_python_interpreter='/usr/bin/env python3'
+
+[servers]
+192.168.30.209
+192.168.30.254
+192.168.30.120
+192.168.30.63
+192.168.30.52
+192.168.30.72
+
+[consul_instances]
+192.168.30.209 consul_node_role=bootstrap ansible_ssh_user=student
+192.168.30.254 consul_node_role=server ansible_ssh_user=student
+192.168.30.120 consul_node_role=server ansible_ssh_user=student
+192.168.30.63 consul_node_role=client ansible_ssh_user=student
+192.168.30.52 consul_node_role=client ansible_ssh_user=student
+192.168.30.72 consul_node_role=client ansible_ssh_user=student
+
+[nomad_instances]
+192.168.30.209 nomad_node_role=server ansible_ssh_user=student
+192.168.30.254 nomad_node_role=server ansible_ssh_user=student
+192.168.30.120 nomad_node_role=server ansible_ssh_user=student
+192.168.30.63 nomad_node_role=client ansible_ssh_user=student
+192.168.30.52 nomad_node_role=client ansible_ssh_user=student
+192.168.30.72 nomad_node_role=client ansible_ssh_user=student
