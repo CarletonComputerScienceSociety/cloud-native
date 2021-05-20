@@ -66,6 +66,7 @@
     - ansible-consul
   vars:
     consul_version: 1.9.5
+    consul_connect_enabled: true
 
 - name: Installing Nomad
   hosts: nomad_instances
