@@ -16,7 +16,7 @@ job "studycenter" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.http.rule=Host(`discretemath.ca`)",
+        "traefik.http.routers.studycenter-frontend.rule=Host(`discretemath.ca`)",
       ]
 
       // check {
