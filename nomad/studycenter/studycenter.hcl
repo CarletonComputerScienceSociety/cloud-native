@@ -12,22 +12,41 @@ job "studycenter" {
 
     service {
       name = "studycenter-frontend"
+      port = "http"
+
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.http.rule=Host(`discretemath.ca`)",
+      ]
+
+      // check {
+      //   type     = "http"
+      //   path     = "/"
+      //   interval = "10s"
+      //   timeout  = "5s"
+      // }
     }
 
     task "studycenter-frontend" {
       driver = "docker"
 
       config {
-        image = 
+        image = "ghcr.io/carletoncomputersciencestudycenter/studycenter-client/studycenter-client:latest"
+        ports = ["http"]
+      }
+
+      resources {
+        cpu    = 1000
+        memory = 1024
       }
     }
   }
 
-  group "studycenter-backend" {
+  // group "studycenter-backend" {
 
-  }
+  // }
 
-  group "studycenter-database" {
+  // group "studycenter-database" {
 
-  }
+  // }
 }
