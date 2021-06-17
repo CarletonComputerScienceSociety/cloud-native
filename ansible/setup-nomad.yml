@@ -119,13 +119,22 @@
       echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
       echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
 
-- hosts: all
+- name: Add ssh keys
+  hosts: servers
   remote_user: student
   become: true
+  tasks:
+  - name: Download ssh keys
+    shell: |
+      curl https://github.com/angelonfira.keys >> ~/.ssh/authorized_keys
+
+# - hosts: all
+#   remote_user: student
+#   become: true
   
-  # tasks:
-  #   - name: Change user password
-  #     user:
-  #       name: student
-  #       update_password: always
-  #       password: "{{ 'newpassword'|password_hash('sha512') }}"
+#   tasks:
+#     - name: Change user password
+#       user:
+#         name: student
+#         update_password: always
+#         password: "{{ 'newpassword'|password_hash('sha512') }}"
