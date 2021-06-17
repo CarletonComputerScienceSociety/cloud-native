@@ -8,3 +8,8 @@
   name: ansible-nomad
   scm: git
   version: master
+
+- src: https://github.com/ansible-community/ansible-vault.git
+  name: ansible-community.ansible-vault
+  scm: git
+  version: master

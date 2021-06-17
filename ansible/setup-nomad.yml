@@ -65,8 +65,24 @@
   roles:
     - ansible-consul
   vars:
-    consul_version: 1.9.5
+    consul_version: 1.9.6
     consul_connect_enabled: true
+    consul_datacenter: SCS
+    consul_acl_datacenter: SCS
+
+- name: Assemble Vault cluster
+  hosts: vault_instances
+  any_errors_fatal: true
+  remote_user: student
+  become: true
+  roles:
+    - ansible-community.ansible-vault
+  vars:
+    vault_version: 1.7.2
+    vault_cluster_name: SCS
+    vault_datacenter: SCS
+    vault_backend: consul
+
 
 - name: Installing Nomad
   hosts: nomad_instances
@@ -86,13 +102,30 @@
     - name: Start nomad
       service: name=nomad state=started enabled=yes
 
+- name: Installing Nomad Consul Connect
+  hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+  - name: Download Consul Connect plugin
+    shell: |
+      curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz;
+      mkdir -p /opt/cni/bin;
+      tar -C /opt/cni/bin -xzf cni-plugins.tgz;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-arptables;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables;
+      echo net.bridge.bridge-nf-call-arptables = 1 > /etc/sysctl.d/10-nomad-consul-connect.conf;
+      echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+      echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+
 - hosts: all
   remote_user: student
   become: true
   
-  tasks:
-    - name: Change user password
-      user:
-        name: student
-        update_password: always
-        password: "{{ 'newpassword'|password_hash('sha512') }}"
+  # tasks:
+  #   - name: Change user password
+  #     user:
+  #       name: student
+  #       update_password: always
+  #       password: "{{ 'newpassword'|password_hash('sha512') }}"
