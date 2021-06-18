@@ -1,0 +1,63 @@
+# -*- mode: ruby -*-
+#
+# Vagrantfile - One development machine to rule them all.
+#
+# https://raw.githubusercontent.com/carlosefr/vagrant-templates/master/vm-ubuntu/Vagrantfile
+
+require 'json'
+
+vm_size = {"cpus" => 1, "memory" => 1024}
+
+Vagrant.configure(2) do |config|
+    config.vm.box = "ubuntu/focal64"
+
+    config.vm.provision "file", source: "~/.ssh/authorized_keys", destination: "~/.ssh/authorized_keys"
+
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+
+    config.ssh.forward_agent = true
+    config.ssh.keep_alive = true
+
+    config.vm.provider "virtualbox" do |vm, override|
+        vm.gui = false
+
+        vm.memory = 1024
+        vm.cpus = 1
+        vm.default_nic_type = "virtio"
+
+        vm.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+        vm.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+        vm.customize ["modifyvm", :id, "--audio", "none"]
+
+        override.vm.network "private_network", type: "dhcp"
+    end
+
+    N = 3
+    (1..N).each do |i|
+        config.vm.define "hashistack-#{i}" do |n|
+            if i == 1
+                # Expose the ssh ports
+                n.vm.network "forwarded_port", guest: 22, host: "#{i+2200}", id: 'ssh'
+            end
+
+            n.vm.network "forwarded_port", guest: 4646, host: "#{i+4650}", id: 'nomad'
+            n.vm.network "forwarded_port", guest: 8500, host: "#{i+8510}", id: 'consul'
+            n.vm.hostname = "hashistack-#{i}"
+            
+            if i == N
+                config.vm.provision :ansible do |ansible|
+                    # As if variable related things in Ansible couldn't be more exciting,
+                    # extra Ansible variables can be defined here as well. Wheeee!
+                    #
+                    ansible.extra_vars = {
+                    consul_log_level: "DEBUG",
+                    consul_iface: "eth1"
+                    }
+                    ansible.playbook = "setup-nomad.yml"
+                    ansible.limit = "all"
+                    compatibility_mode = "2.0"
+                end
+            end
+        end
+    end
+end

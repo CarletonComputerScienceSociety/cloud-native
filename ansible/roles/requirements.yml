@@ -1,5 +1,5 @@
 ---
-- src: https://github.com/ansible-community/ansible-consul.git
+- src: https://github.com/AngelOnFira/ansible-consul
   name: ansible-consul
   scm: git
   version: master
