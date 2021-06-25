@@ -46,6 +46,8 @@ job "studycenter" {
     count = 1
 
     network {
+      mode = "bridge"
+
       port "http" {
         to = 3000
       }
@@ -107,12 +109,20 @@ job "studycenter" {
     count = 1
 
     network {
+      mode = "bridge"
+
       port "postgres" {
         to = 5432
       }
 
       port "redis" {
         to = 6379
+      }
+    }
+
+    service {
+      connect {
+        sidecar_service {}
       }
     }
 
@@ -125,7 +135,7 @@ job "studycenter" {
       }
 
       env {
-        POSTGRES_USER     = "postgres",
+        POSTGRES_USER     = "postgres"
         POSTGRES_PASSWORD = "1234"
       }
 
@@ -142,40 +152,25 @@ job "studycenter" {
       service {
         name = "studycenter-postgres"
         port = "postgres"
+      }
+    }
 
-        check {
-          name     = "alive"
-          type     = "tcp"
-          interval = "10s"
-          timeout  = "2s"
-        }
+    task "redis" {
+      driver = "docker"
 
-        connect {
-          sidecar_service {}
-        }
+      config {
+        image = "redis:6"
+        ports = ["redis"]
       }
 
-      task "redis" {
-        driver = "docker"
+      resources {
+        cpu    = 1000
+        memory = 1024
+      }
 
-        config {
-          image = "redis:6"
-          ports = ["redis"]
-        }
-
-        resources {
-          cpu    = 1000
-          memory = 1024
-        }
-
-        service {
-          name = "studycenter-redis"
-          port = "redis"
-
-          connect {
-            sidecar_service {}
-          }
-        }
+      service {
+        name = "studycenter-redis"
+        port = "redis"
       }
     }
   }
