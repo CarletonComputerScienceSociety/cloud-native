@@ -65,7 +65,7 @@
   roles:
     - ansible-consul
   vars:
-    consul_version: 1.9.6
+    consul_version: 1.10.0
     consul_datacenter: scs
     consul_acl_datacenter: scs
     # Consul connect

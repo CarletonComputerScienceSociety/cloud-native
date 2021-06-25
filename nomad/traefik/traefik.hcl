@@ -1,6 +1,6 @@
 job "traefik" {
   region      = "global"
-  datacenters = ["SCS"]
+  datacenters = ["scs"]
   type        = "service"
 
   constraint {
