@@ -67,6 +67,12 @@ job "studycenter" {
         path     = "/"
         interval = "10s"
         timeout  = "5s"
+
+        check_restart {
+          limit           = 3
+          grace           = "120s"
+          ignore_warnings = false
+        }
       }
 
       connect {
@@ -94,7 +100,7 @@ job "studycenter" {
       }
 
       resources {
-        cpu    = 1000
+        cpu    = 4096
         memory = 1024
       }
 
