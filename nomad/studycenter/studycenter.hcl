@@ -124,6 +124,7 @@ job "studycenter" {
       }
 
       port = "5432"
+      name = "studycenter-postgres"
     }
 
     task "postgres" {
@@ -138,20 +139,10 @@ job "studycenter" {
         POSTGRES_PASSWORD = "1234"
       }
 
-      logs {
-        max_files     = 5
-        max_file_size = 15
-      }
-
       resources {
         cpu    = 1000
         memory = 1024
       }
-
-      // service {
-      //   name = "studycenter-postgres"
-      //   port = "postgres"
-      // }
     }
   }
 
@@ -168,6 +159,7 @@ job "studycenter" {
       }
 
       port = "6379"
+      name = "studycenter-redis"
     }
 
     task "redis" {
@@ -181,11 +173,6 @@ job "studycenter" {
         cpu    = 1000
         memory = 1024
       }
-
-      // service {
-      //   name = "studycenter-redis"
-      //   port = "redis"
-      // }
     }
   }
 }
