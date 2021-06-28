@@ -2,7 +2,7 @@ job "studycenter" {
   datacenters = ["scs"]
 
   group "studycenter-frontend" {
-    count = 3
+    count = 2
 
     network {
       port "http" {
@@ -105,31 +105,25 @@ job "studycenter" {
       }
 
       env {
-        STUDYCENTER_API_DATABASE_HOST = "${NOMAD_UPSTREAM_ADDR_studycenter_postgres}"
+        STUDYCENTER_API_DATABASE_HOST = "${NOMAD_UPSTREAM_IP_studycenter_postgres}"
         STUDYCENTER_API_REDIS_HOST    = "redis://${NOMAD_UPSTREAM_ADDR_studycenter_redis}:6379"
       }
     }
   }
 
-  group "studycenter-database" {
+  group "studycenter-postgres" {
     count = 1
 
     network {
       mode = "bridge"
-
-      port "postgres" {
-        to = 5432
-      }
-
-      port "redis" {
-        to = 6379
-      }
     }
 
     service {
       connect {
         sidecar_service {}
       }
+
+      port = "5432"
     }
 
     task "postgres" {
@@ -137,7 +131,6 @@ job "studycenter" {
 
       config {
         image = "postgres:12"
-        ports = ["postgres"]
       }
 
       env {
@@ -155,10 +148,26 @@ job "studycenter" {
         memory = 1024
       }
 
-      service {
-        name = "studycenter-postgres"
-        port = "postgres"
+      // service {
+      //   name = "studycenter-postgres"
+      //   port = "postgres"
+      // }
+    }
+  }
+
+  group "studycenter-redis" {
+    count = 1
+
+    network {
+      mode = "bridge"
+    }
+
+    service {
+      connect {
+        sidecar_service {}
       }
+
+      port = "6379"
     }
 
     task "redis" {
@@ -166,7 +175,6 @@ job "studycenter" {
 
       config {
         image = "redis:6"
-        ports = ["redis"]
       }
 
       resources {
@@ -174,10 +182,10 @@ job "studycenter" {
         memory = 1024
       }
 
-      service {
-        name = "studycenter-redis"
-        port = "redis"
-      }
+      // service {
+      //   name = "studycenter-redis"
+      //   port = "redis"
+      // }
     }
   }
 }
