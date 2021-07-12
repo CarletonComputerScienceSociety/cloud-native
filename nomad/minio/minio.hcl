@@ -1,5 +1,5 @@
 job "s3" {
-  datacenters = ["SCS"]
+  datacenters = ["scs"]
 
   group "minio" {
     ephemeral_disk {
@@ -33,8 +33,9 @@ job "s3" {
       }
 
       env {
-        MINIO_ACCESS_KEY = "AKIAIOSFODNN7EXAMPLE"
-        MINIO_SECRET_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        MINIO_ROOT_USER = "admin"
+        MINIO_ROOT_PASSWORD = "AnejPq958Ha6FVSg9tGT5ZcBz34"
+        MINIO_BROWSER_REDIRECT_URI = "grafana.discretemath.ca"
       }
 
       service {
@@ -51,7 +52,7 @@ job "s3" {
 
         check {
           type     = "http"
-          path     = "/minio/login"
+          path     = "/minio/health/live"
           port     = "http"
           interval = "10s"
           timeout  = "2s"

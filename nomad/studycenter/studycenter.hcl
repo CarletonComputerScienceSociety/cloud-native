@@ -2,7 +2,7 @@ job "studycenter" {
   datacenters = ["scs"]
 
   group "studycenter-frontend" {
-    count = 2
+    count = 1
 
     network {
       port "http" {
