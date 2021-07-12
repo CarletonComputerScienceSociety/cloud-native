@@ -6,11 +6,11 @@ terraform {
     }
   }
 
-  //   backend "s3" {
-  //     bucket = "ccss-terraform"
-  //     key    = "terraform/state"
-  //     region = "ca-central-1"
-  //   }
+    backend "s3" {
+      bucket = "ccss-terraform"
+      key    = "terraform/state"
+      region = "ca-central-1"
+    }
 }
 
 provider "aws" {
@@ -143,7 +143,7 @@ resource "aws_route53_record" "rancher_discretemath_ca_record" {
 
 resource "aws_route53_record" "minio_discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
-  name            = "minio_discretemath_ca_record.discretemath.ca"
+  name            = "minio.discretemath.ca"
   type            = "A"
   ttl             = "300"
   allow_overwrite = true
@@ -153,7 +153,7 @@ resource "aws_route53_record" "minio_discretemath_ca_record" {
 
 resource "aws_route53_record" "console_minio_discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
-  name            = "console_minio.discretemath.ca"
+  name            = "console.minio.discretemath.ca"
   type            = "A"
   ttl             = "300"
   allow_overwrite = true

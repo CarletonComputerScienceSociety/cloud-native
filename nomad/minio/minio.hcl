@@ -12,6 +12,9 @@ job "s3" {
       port "http" {
         to = 9000
       }
+      port "console" {
+        to = 9001
+      }
     }
 
     task "minio" {
@@ -27,33 +30,53 @@ job "s3" {
         args = [
           "server",
           "/export",
+          "--console-address=:9001",
         ]
 
-        ports = ["http"]
+        ports = ["http", "console"]
       }
 
       env {
-        MINIO_ROOT_USER = "admin"
-        MINIO_ROOT_PASSWORD = "AnejPq958Ha6FVSg9tGT5ZcBz34"
-        MINIO_BROWSER_REDIRECT_URI = "grafana.discretemath.ca"
+        MINIO_ROOT_USER            = "admin"
+        MINIO_ROOT_PASSWORD        = "AnejPq958Ha6FVSg9tGT5ZcBz34"
+        MINIO_BROWSER_REDIRECT_URI = "console.minio.discretemath.ca"
       }
 
       service {
-        name = "minio"
+        name = "minio-server"
 
         tags = [
-          "s3",
-          "minio",
           "traefik.enable=true",
-          "traefik.http.routers.http.rule=Host(`grafana.discretemath.ca`)",
+          "traefik.http.routers.minio-router.rule=Host(`minio.discretemath.ca`)",
         ]
 
         port = "http"
 
         check {
+          name     = "minio check"
           type     = "http"
           path     = "/minio/health/live"
           port     = "http"
+          interval = "10s"
+          timeout  = "2s"
+        }
+      }
+
+      service {
+        name = "minio-console"
+
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.minio-console-router.rule=Host(`console.minio.discretemath.ca`)",
+        ]
+
+        port = "console"
+
+        check {
+          name     = "minio console check"
+          type     = "http"
+          path     = "/dashboard"
+          port     = "console"
           interval = "10s"
           timeout  = "2s"
         }

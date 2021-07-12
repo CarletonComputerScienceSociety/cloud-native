@@ -1,5 +1,5 @@
 job "cors-anywhere" {
-  datacenters = ["SCS"]
+  datacenters = ["scs"]
 
   group "cors-anywhere" {
     count = 3
@@ -31,10 +31,9 @@ job "cors-anywhere" {
       driver = "docker"
 
       config {
-        image        = "redocly/cors-anywhere"
+        image = "redocly/cors-anywhere"
         ports = ["http"]
       }
-
 
       resources {
         cpu    = 100
