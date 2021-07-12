@@ -124,39 +124,39 @@ resource "aws_route53_record" "stats_discretemath_ca_record" {
 resource "aws_route53_record" "jupyter_discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
   name            = "jupyter.discretemath.ca"
-  type            = "A"
+  type            = "CNAME"
   ttl             = "300"
   allow_overwrite = true
 
-  records = ["134.117.26.98"]
+  records = ["discretemath.ca"]
 }
 
 resource "aws_route53_record" "rancher_discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
   name            = "rancher.discretemath.ca"
-  type            = "A"
+  type            = "CNAME"
   ttl             = "300"
   allow_overwrite = true
 
-  records = ["134.117.26.98"]
+  records = ["discretemath.ca"]
 }
 
 resource "aws_route53_record" "minio_discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
   name            = "minio.discretemath.ca"
-  type            = "A"
+  type            = "CNAME"
   ttl             = "300"
   allow_overwrite = true
 
-  records = ["134.117.26.98"]
+  records = ["discretemath.ca"]
 }
 
 resource "aws_route53_record" "console_minio_discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
   name            = "console.minio.discretemath.ca"
-  type            = "A"
+  type            = "CNAME"
   ttl             = "300"
   allow_overwrite = true
 
-  records = ["134.117.26.98"]
+  records = ["discretemath.ca"]
 }
