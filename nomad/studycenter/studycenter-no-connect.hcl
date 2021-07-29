@@ -1,4 +1,4 @@
-job "studycenter" {
+job "studycenter-no-connect" {
   datacenters = ["scs"]
 
   group "studycenter" {
@@ -13,10 +13,12 @@ job "studycenter" {
 
       port "redis" {
         static = 6379
+        to     = 6379
       }
 
       port "postgres" {
         static = 5432
+        to     = 5432
       }
     }
 
@@ -68,6 +70,12 @@ job "studycenter" {
           path     = "/"
           interval = "10s"
           timeout  = "5s"
+
+          check_restart {
+            limit           = 3
+            grace           = "90s"
+            ignore_warnings = true
+          }
         }
       }
 
@@ -91,7 +99,7 @@ job "studycenter" {
       driver = "docker"
 
       service {
-        name = "studycenter-backend"
+        name = "studycenter-postgres"
         port = "postgres"
 
         check {
@@ -104,6 +112,7 @@ job "studycenter" {
 
       config {
         image = "postgres:12"
+        ports = ["postgres"]
       }
 
       env {
@@ -121,7 +130,7 @@ job "studycenter" {
       driver = "docker"
 
       service {
-        name = "studycenter-backend"
+        name = "studycenter-redis"
         port = "redis"
 
         check {
@@ -134,6 +143,7 @@ job "studycenter" {
 
       config {
         image = "redis:6"
+        ports = ["redis"]
       }
 
       resources {
