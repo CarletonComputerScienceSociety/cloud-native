@@ -4,16 +4,11 @@ job "discretemath-no-connect" {
   group "discretemath" {
     network {
       port "frontend" {
-        to = 3000
+        to = 5000
       }
 
       port "api" {
         to = 3000
-      }
-
-      port "redis" {
-        static = 6379
-        to     = 6379
       }
 
       port "postgres" {
@@ -39,6 +34,13 @@ job "discretemath-no-connect" {
           path     = "/"
           interval = "10s"
           timeout  = "5s"
+          port     = "frontend"
+
+          check_restart {
+            limit           = 3
+            grace           = "90s"
+            ignore_warnings = true
+          }
         }
       }
 
@@ -70,6 +72,7 @@ job "discretemath-no-connect" {
           path     = "/"
           interval = "10s"
           timeout  = "5s"
+          port     = "api"
 
           check_restart {
             limit           = 3
