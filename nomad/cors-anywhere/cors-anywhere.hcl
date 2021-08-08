@@ -17,6 +17,8 @@ job "cors-anywhere" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.cors-anywhere.rule=Host(`cors.discretemath.ca`)",
+        "traefik.http.routers.cors-anywhere.entrypoints=https",
+        "traefik.http.routers.cors-anywhere.tls.certresolver=letsencrypt"
       ]
 
       check {

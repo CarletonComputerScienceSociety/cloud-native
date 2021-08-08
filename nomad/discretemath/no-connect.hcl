@@ -28,20 +28,6 @@ job "discretemath-no-connect" {
           "traefik.enable=true",
           "traefik.http.routers.discretemath-frontend.rule=Host(`discretemath.ca`)",
         ]
-
-        check {
-          type     = "http"
-          path     = "/"
-          interval = "10s"
-          timeout  = "5s"
-          port     = "frontend"
-
-          check_restart {
-            limit           = 3
-            grace           = "90s"
-            ignore_warnings = true
-          }
-        }
       }
 
       config {
@@ -66,20 +52,6 @@ job "discretemath-no-connect" {
           "traefik.enable=true",
           "traefik.http.routers.discretemath-backend.rule=Host(`api.discretemath.ca`)",
         ]
-
-        check {
-          type     = "http"
-          path     = "/"
-          interval = "10s"
-          timeout  = "5s"
-          port     = "api"
-
-          check_restart {
-            limit           = 3
-            grace           = "90s"
-            ignore_warnings = true
-          }
-        }
       }
 
       config {
