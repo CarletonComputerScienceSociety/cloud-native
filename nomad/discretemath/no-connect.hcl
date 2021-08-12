@@ -27,6 +27,8 @@ job "discretemath-no-connect" {
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.discretemath-frontend.rule=Host(`discretemath.ca`)",
+          "traefik.http.routers.discretemath-frontend.entrypoints=https",
+          "traefik.http.routers.discretemath-frontend.tls.certresolver=letsencrypt"
         ]
       }
 
@@ -51,6 +53,8 @@ job "discretemath-no-connect" {
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.discretemath-backend.rule=Host(`api.discretemath.ca`)",
+          "traefik.http.routers.discretemath-backend.entrypoints=https",
+          "traefik.http.routers.discretemath-backend.tls.certresolver=letsencrypt"
         ]
       }
 
@@ -92,6 +96,7 @@ job "discretemath-no-connect" {
       env {
         POSTGRES_USER     = "postgres"
         POSTGRES_PASSWORD = "1234"
+        TEST="test"
       }
 
       resources {
