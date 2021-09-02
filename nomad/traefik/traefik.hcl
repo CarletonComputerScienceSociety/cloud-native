@@ -140,6 +140,7 @@ job "traefik" {
     directory = "/etc/traefik/config/dynamic"
     watch = true
   [providers.docker]
+    exposedbydefault = false
 
 [certificatesresolvers.letsencrypt.acme]
   email = "forestkzanderson@gmail.com"
@@ -147,8 +148,8 @@ job "traefik" {
   [certificatesresolvers.letsencrypt.acme.httpchallenge]
     entrypoint = "http"
 
-[log]
-    level = "DEBUG"
+# [log]
+#     level = "DEBUG"
 EOF
 
         destination = "local/traefik.toml"

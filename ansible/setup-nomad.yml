@@ -71,10 +71,12 @@
     # Consul connect
     consul_connect_enabled: true
     consul_ports_grpc: 8502
-    nomad_servers:
+    consul_servers:
       - "192.168.30.45"
-      - "192.168.30.42"
-      - "192.168.30.92"
+    #   - "192.168.30.42"
+    #   - "192.168.30.92"
+    # consul_bootstrap_expect: true
+    # consul_gather_server_facts: true
 
 - name: Assemble Vault cluster
   hosts: vault_instances
@@ -84,7 +86,7 @@
   roles:
     - ansible-community.ansible-vault
   vars:
-    vault_version: 1.8.0
+    vault_version: 1.8.2
     vault_cluster_name: scs
     vault_datacenter: scs
     vault_backend: consul
@@ -99,7 +101,7 @@
     - ansible-nomad
   vars:
     nomad_encrypt_enable: true
-    nomad_version: 1.1.3
+    nomad_version: 1.1.4
     nomad_use_consul: true
     nomad_datacenter: scs
     nomad_bind_address: 0.0.0.0

@@ -26,6 +26,12 @@ job "cors-anywhere" {
         path     = "/"
         interval = "2s"
         timeout  = "2s"
+
+        check_restart {
+          limit           = 3
+          grace           = "10s"
+          ignore_warnings = true
+        }
       }
     }
 
