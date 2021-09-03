@@ -57,81 +57,96 @@ job "merged-staging" {
       }
     }
 
-    // task "merged-backend-staging" {
-    //   driver = "docker"
+    task "merged-backend-staging" {
+      driver = "docker"
 
-    //   service {
-    //     name = "merged-backend-staging"
-    //     port = "api"
+      service {
+        name = "merged-backend-staging"
+        port = "api"
 
-    //     tags = [
-    //       "traefik.enable=true",
-    //       "traefik.http.routers.merged-backend-staging.rule=Host(`api.merged.staging.discretemath.ca`)",
-    //       "traefik.http.routers.merged-backend-staging.entrypoints=https",
-    //       "traefik.http.routers.merged-backend-staging.tls.certresolver=letsencrypt"
-    //     ]
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.merged-backend-staging.rule=Host(`api.merged.staging.discretemath.ca`)",
+          "traefik.http.routers.merged-backend-staging.entrypoints=https",
+          "traefik.http.routers.merged-backend-staging.tls.certresolver=letsencrypt"
+        ]
 
-    //     check {
-    //       type     = "http"
-    //       port     = "api"
-    //       path     = "/graphgl"
-    //       method   = "POST"
-    //       interval = "5s"
-    //       timeout  = "2s"
+        check {
+          type     = "http"
+          port     = "api"
+          path     = "/graphgl"
+          method   = "POST"
+          interval = "5s"
+          timeout  = "2s"
 
-    //       check_restart {
-    //         limit           = 3
-    //         grace           = "30s"
-    //         ignore_warnings = false
-    //       }
-    //     }
-    //   }
+          check_restart {
+            limit           = 3
+            grace           = "30s"
+            ignore_warnings = false
+          }
+        }
 
-    //   config {
-    //     image = "ghcr.io/carletoncomputersciencesociety/merged/merged-api:latest"
-    //     ports = ["api"]
-    //   }
+        connect {
+          sidecar_service {
+            proxy {
+              upstreams {
+                destination_name = "merged-postgres"
+                local_bind_port  = 5432
+              }
+            }
+          }
+        }
+      }
 
-    //   resources {
-    //     cpu    = 4096
-    //     memory = 1024
-    //   }
+      config {
+        image = "ghcr.io/carletoncomputersciencesociety/merged/merged-api:latest"
+        ports = ["api"]
+      }
 
-    //   env {
-    //     DISCRETEMATH_API_DATABASE_HOST = "${NOMAD_IP_postgres}"
-    //   }
-    // }
+      resources {
+        cpu    = 4096
+        memory = 1024
+      }
 
-    // task "postgres" {
-    //   driver = "docker"
+      env {
+        DISCRETEMATH_API_DATABASE_HOST = "${NOMAD_IP_postgres}"
+      }
+    }
 
-    //   service {
-    //     name = "merged-postgres-staging"
-    //     port = "postgres"
+    task "merged-postgres" {
+      driver = "docker"
 
-    //     check {
-    //       type     = "tcp"
-    //       port     = "postgres"
-    //       interval = "10s"
-    //       timeout  = "5s"
-    //     }
-    //   }
+      service {
+        name = "merged-postgres-staging"
+        port = "postgres"
 
-    //   config {
-    //     image = "postgres:12"
-    //     ports = ["postgres"]
-    //   }
+        check {
+          type     = "tcp"
+          port     = "postgres"
+          interval = "10s"
+          timeout  = "5s"
+        }
 
-    //   env {
-    //     POSTGRES_USER     = "postgres"
-    //     POSTGRES_PASSWORD = "1234"
-    //     TEST              = "test"
-    //   }
+        connect {
+          sidecar_service {}
+        }
+      }
 
-    //   resources {
-    //     cpu    = 1000
-    //     memory = 1024
-    //   }
-    // }
+      config {
+        image = "postgres:12"
+        ports = ["postgres"]
+      }
+
+      env {
+        POSTGRES_USER     = "postgres"
+        POSTGRES_PASSWORD = "1234"
+        TEST              = "test"
+      }
+
+      resources {
+        cpu    = 1000
+        memory = 1024
+      }
+    }
   }
 }
