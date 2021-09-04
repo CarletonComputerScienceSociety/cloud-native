@@ -91,7 +91,7 @@ job "traefik" {
       driver = "docker"
 
       config {
-        image = "traefik:2.4"
+        image = "traefik:2.5"
         // image        = "shoenig/traefik:connect"
         network_mode = "host"
 
