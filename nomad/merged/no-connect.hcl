@@ -1,10 +1,33 @@
 job "merged-staging" {
   datacenters = ["scs"]
 
-  group "client" {
+  group "merged" {
     network {
       port "frontend" {
         to = 3000
+      }
+
+      port "api" {
+        to = 8000
+      }
+
+      port "postgres" {
+        static = 5433
+        to     = 5433
+      }
+    }
+
+    task "nextjs" {
+      driver = "docker"
+
+      config {
+        image = "ghcr.io/carletoncomputersciencesociety/merged/merged-client:latest"
+        ports = ["frontend"]
+      }
+
+      resources {
+        cpu    = 1000
+        memory = 1024
       }
     }
 
@@ -34,70 +57,6 @@ job "merged-staging" {
       }
     }
 
-    task "nextjs" {
-      driver = "docker"
-
-      config {
-        image = "ghcr.io/carletoncomputersciencesociety/merged/merged-client:latest"
-        ports = ["frontend"]
-      }
-
-      resources {
-        cpu    = 1000
-        memory = 1024
-      }
-    }
-  }
-
-  group "backend" {
-    network {
-      mode = "bridge"
-
-      port "api" {
-        to = 8000
-      }
-    }
-
-    service {
-      name = "merged-django-staging"
-      port = "api"
-
-      tags = [
-        "traefik.enable=true",
-        "traefik.http.routers.merged-django-staging.rule=Host(`api.merged.staging.discretemath.ca`)",
-        "traefik.http.routers.merged-django-staging.entrypoints=https",
-        "traefik.http.routers.merged-django-staging.tls.certresolver=letsencrypt"
-      ]
-
-      // check {
-      //   type     = "http"
-      //   port     = "api"
-      //   path     = "/graphgl"
-      //   method   = "POST"
-      //   interval = "5s"
-      //   timeout  = "2s"
-
-      //   check_restart {
-      //     limit           = 3
-      //     grace           = "30s"
-      //     ignore_warnings = false
-      //   }
-      // }
-
-      connect {
-        sidecar_service {
-          proxy {
-            upstreams {
-              destination_name = "merged-postgres-staging"
-              local_bind_port  = 5432
-            }
-          }
-          # Required so sidecar doesn't duplicate tags
-          tags = ["dummy"]
-        }
-      }
-    }
-
     task "django" {
       driver = "docker"
 
@@ -112,30 +71,24 @@ job "merged-staging" {
       }
 
       env {
-        DISCRETEMATH_API_DATABASE_HOST = "${NOMAD_IP_postgres}"
-        TEST                           = "123"
+        MERGED_DATABASE_HOST = "${NOMAD_IP_postgres}"
+        TEST                           = "asdfasd"
       }
-    }
-  }
 
-  group "database" {
-    network {
-      mode = "bridge"
-    }
+      service {
+        name = "merged-django-staging"
+        port = "api"
 
-    service {
-      name = "merged-postgres-staging"
-      port = "5432"
-
-      connect {
-        sidecar_service {
-          # Required so sidecar doesn't duplicate tags
-          tags = ["dummy"]
-        }
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.merged-django-staging.rule=Host(`api.merged.staging.discretemath.ca`)",
+          "traefik.http.routers.merged-django-staging.entrypoints=https",
+          "traefik.http.routers.merged-django-staging.tls.certresolver=letsencrypt",
+        ]
       }
     }
 
-    task "merged-postgres-staging" {
+    task "postgres" {
       driver = "docker"
 
       config {
@@ -146,6 +99,7 @@ job "merged-staging" {
       env {
         POSTGRES_USER     = "postgres"
         POSTGRES_PASSWORD = "1234"
+        POSTGRES_DB       = "community_db"
         TEST              = "test"
       }
 

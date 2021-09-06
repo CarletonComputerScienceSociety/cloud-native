@@ -1,4 +1,4 @@
-job "discretemath-no-connect" {
+job "discretemath-no-connect-staging" {
   datacenters = ["scs"]
 
   group "discretemath" {
@@ -17,19 +17,33 @@ job "discretemath-no-connect" {
       }
     }
 
-    task "discretemath-frontend" {
+    task "discretemath-frontend-staging" {
       driver = "docker"
 
       service {
-        name = "discretemath-frontend"
+        name = "discretemath-frontend-staging"
         port = "frontend"
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.discretemath-frontend.rule=Host(`discretemath.ca`)",
-          "traefik.http.routers.discretemath-frontend.entrypoints=https",
-          "traefik.http.routers.discretemath-frontend.tls.certresolver=letsencrypt"
+          "traefik.http.routers.discretemath-frontend-staging.rule=Host(`staging.discretemath.ca`)",
+          "traefik.http.routers.discretemath-frontend-staging.entrypoints=https",
+          "traefik.http.routers.discretemath-frontend-staging.tls.certresolver=letsencrypt"
         ]
+
+        check {
+          type     = "http"
+          port     = "frontend"
+          path     = "/"
+          interval = "5s"
+          timeout  = "2s"
+
+          check_restart {
+            limit           = 3
+            grace           = "30s"
+            ignore_warnings = false
+          }
+        }
       }
 
       config {
@@ -41,25 +55,36 @@ job "discretemath-no-connect" {
         cpu    = 1000
         memory = 1024
       }
-
-      env {
-        TEST = "asdfasd"
-      }
     }
 
-    task "discretemath-backend" {
+    task "discretemath-backend-staging" {
       driver = "docker"
 
       service {
-        name = "discretemath-backend"
+        name = "discretemath-backend-staging"
         port = "api"
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.discretemath-backend.rule=Host(`api.discretemath.ca`)",
-          "traefik.http.routers.discretemath-backend.entrypoints=https",
-          "traefik.http.routers.discretemath-backend.tls.certresolver=letsencrypt"
+          "traefik.http.routers.discretemath-backend-staging.rule=Host(`api.staging.discretemath.ca`)",
+          "traefik.http.routers.discretemath-backend-staging.entrypoints=https",
+          "traefik.http.routers.discretemath-backend-staging.tls.certresolver=letsencrypt"
         ]
+
+        check {
+          type     = "http"
+          port     = "api"
+          path     = "/graphgl"
+          method   = "POST"
+          interval = "5s"
+          timeout  = "2s"
+
+          check_restart {
+            limit           = 3
+            grace           = "30s"
+            ignore_warnings = false
+          }
+        }
       }
 
       config {
@@ -81,7 +106,7 @@ job "discretemath-no-connect" {
       driver = "docker"
 
       service {
-        name = "discretemath-postgres"
+        name = "discretemath-postgres-staging"
         port = "postgres"
 
         check {
