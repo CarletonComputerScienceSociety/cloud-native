@@ -91,7 +91,7 @@ job "traefik" {
       driver = "docker"
 
       config {
-        image = "traefik:2.5"
+        image = "traefik:2.5.2"
         // image        = "shoenig/traefik:connect"
         network_mode = "host"
 
@@ -120,6 +120,7 @@ job "traefik" {
 [api]
     dashboard = true
     insecure  = true
+    debug     = true
 
 [metrics]
   [metrics.prometheus]
@@ -132,6 +133,11 @@ job "traefik" {
       prefix           = "traefik"
       exposedByDefault = false
 
+      # https://gist.github.com/apollo13/857ae4c5e18de619815c2628212449e1
+      connectAware     = true
+      connectByDefault = false
+      serviceName      = "traefik"
+
       [providers.consulCatalog.endpoint]
         address = "127.0.0.1:8500"
         scheme  = "http"
@@ -139,8 +145,6 @@ job "traefik" {
   [providers.file]
     directory = "/etc/traefik/config/dynamic"
     watch = true
-  [providers.docker]
-    exposedbydefault = false
 
 [certificatesresolvers.letsencrypt.acme]
   email = "forestkzanderson@gmail.com"
@@ -148,8 +152,8 @@ job "traefik" {
   [certificatesresolvers.letsencrypt.acme.httpchallenge]
     entrypoint = "http"
 
-# [log]
-#     level = "DEBUG"
+ [log]
+     level = "DEBUG"
 EOF
 
         destination = "local/traefik.toml"

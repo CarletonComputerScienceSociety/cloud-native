@@ -34,7 +34,7 @@ job "merged-staging" {
       }
     }
 
-    task "client-nextjs-staging" {
+    task "nextjs" {
       driver = "docker"
 
       config {
@@ -92,11 +92,13 @@ job "merged-staging" {
               local_bind_port  = 5432
             }
           }
+          # Required so sidecar doesn't duplicate tags
+          tags = ["dummy"]
         }
       }
     }
 
-    task "merged-django-staging" {
+    task "django" {
       driver = "docker"
 
       config {
@@ -111,7 +113,7 @@ job "merged-staging" {
 
       env {
         DISCRETEMATH_API_DATABASE_HOST = "${NOMAD_IP_postgres}"
-        TEST = "123"
+        TEST                           = "123"
       }
     }
   }
@@ -126,7 +128,10 @@ job "merged-staging" {
       port = "5432"
 
       connect {
-        sidecar_service {}
+        sidecar_service {
+          # Required so sidecar doesn't duplicate tags
+          tags = ["dummy"]
+        }
       }
     }
 
