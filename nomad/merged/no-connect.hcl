@@ -13,8 +13,14 @@ job "merged-staging" {
 
       port "postgres" {
         static = 5433
-        to     = 5433
+        to     = 5432
       }
+    }
+
+    volume "merged-postgres" {
+      type      = "host"
+      read_only = false
+      source    = "merged-postgres"
     }
 
     task "nextjs" {
@@ -37,7 +43,7 @@ job "merged-staging" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.merged-nextjs-staging.rule=Host(`merged.staging.discretemath.ca`)",
+        "traefik.http.routers.merged-nextjs-staging.rule=Host(`merged.carletoncomputerscience.ca`)",
         "traefik.http.routers.merged-nextjs-staging.entrypoints=https",
         "traefik.http.routers.merged-nextjs-staging.tls.certresolver=letsencrypt"
       ]
@@ -72,7 +78,6 @@ job "merged-staging" {
 
       env {
         MERGED_DATABASE_HOST = "${NOMAD_IP_postgres}"
-        TEST                           = "asdfasd"
       }
 
       service {
@@ -81,7 +86,7 @@ job "merged-staging" {
 
         tags = [
           "traefik.enable=true",
-          "traefik.http.routers.merged-django-staging.rule=Host(`api.merged.staging.discretemath.ca`)",
+          "traefik.http.routers.merged-django-staging.rule=Host(`api.merged.carletoncomputerscience.ca`)",
           "traefik.http.routers.merged-django-staging.entrypoints=https",
           "traefik.http.routers.merged-django-staging.tls.certresolver=letsencrypt",
         ]
@@ -90,6 +95,24 @@ job "merged-staging" {
 
     task "postgres" {
       driver = "docker"
+
+      volume_mount {
+        volume      = "merged-postgres"
+        destination = "/var/lib/postgresql/data"
+        read_only   = false
+      }
+
+      service {
+        name = "merged-postgres-staging"
+        port = "postgres"
+
+        check {
+          type     = "tcp"
+          port     = "postgres"
+          interval = "10s"
+          timeout  = "5s"
+        }
+      }
 
       config {
         image = "postgres:12"
@@ -100,7 +123,7 @@ job "merged-staging" {
         POSTGRES_USER     = "postgres"
         POSTGRES_PASSWORD = "1234"
         POSTGRES_DB       = "community_db"
-        TEST              = "test"
+        PGDATA            = "/var/lib/postgresql/data/pgdata"
       }
 
       resources {

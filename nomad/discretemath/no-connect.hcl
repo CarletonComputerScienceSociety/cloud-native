@@ -41,10 +41,6 @@ job "discretemath-no-connect" {
         cpu    = 1000
         memory = 1024
       }
-
-      env {
-        TEST = "asdfasd"
-      }
     }
 
     task "discretemath-backend" {

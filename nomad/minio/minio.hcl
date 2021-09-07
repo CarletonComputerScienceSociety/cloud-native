@@ -2,12 +2,6 @@ job "s3" {
   datacenters = ["scs"]
 
   group "minio" {
-    ephemeral_disk {
-      migrate = true
-      size    = "5000"
-      sticky  = true
-    }
-
     network {
       port "http" {
         to = 9000
@@ -17,15 +11,23 @@ job "s3" {
       }
     }
 
+    volume "minio" {
+      type      = "host"
+      read_only = false
+      source    = "minio"
+    }
+
     task "minio" {
       driver = "docker"
 
+      volume_mount {
+        volume      = "minio"
+        destination = "/export"
+        read_only   = false
+      }
+
       config {
         image = "minio/minio"
-
-        volumes = [
-          "local/export:/export",
-        ]
 
         args = [
           "server",
@@ -38,8 +40,9 @@ job "s3" {
 
       env {
         MINIO_ROOT_USER            = "admin"
-        MINIO_ROOT_PASSWORD        = "AnejPq958Ha6FVSg9tGT5ZcBz34"
+        // MINIO_ROOT_PASSWORD        = "password" # Change this to the actual password
         MINIO_BROWSER_REDIRECT_URI = "console.minio.discretemath.ca"
+        MINIO_SERVER_URL           = "https://minio.discretemath.ca"
       }
 
       service {
@@ -48,6 +51,8 @@ job "s3" {
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.minio-router.rule=Host(`minio.discretemath.ca`)",
+          "traefik.http.routers.minio-router.entrypoints=https",
+          "traefik.http.routers.minio-router.tls.certresolver=letsencrypt"
         ]
 
         port = "http"
@@ -68,6 +73,8 @@ job "s3" {
         tags = [
           "traefik.enable=true",
           "traefik.http.routers.minio-console-router.rule=Host(`console.minio.discretemath.ca`)",
+          "traefik.http.routers.minio-console-router.entrypoints=https",
+          "traefik.http.routers.minio-console-router.tls.certresolver=letsencrypt"
         ]
 
         port = "console"
