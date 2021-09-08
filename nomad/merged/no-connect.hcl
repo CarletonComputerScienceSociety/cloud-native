@@ -80,6 +80,16 @@ job "merged-staging" {
         MERGED_DATABASE_HOST = "${NOMAD_IP_postgres}"
       }
 
+      template {
+        data = <<EOH
+AWS_SECRET_ACCESS_KEY="{{ key "django-minio-secret" }}"
+EOH
+
+        destination = "secrets/file.env"
+        env         = true
+      }
+
+
       service {
         name = "merged-django-staging"
         port = "api"
