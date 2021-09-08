@@ -21,10 +21,9 @@ job "shynet" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.shynet.rule=Host(`shynet.discretemath.ca`)",
+        "traefik.http.routers.shynet.rule=Host(`shynet.carletoncomputersciencesociety.ca`)",
         "traefik.http.routers.shynet.entrypoints=https",
-        "traefik.http.routers.shynet.tls.certresolver=letsencrypt",
-        "traefik.consulcatalog.connect=true"
+        "traefik.http.routers.shynet.tls.certresolver=letsencrypt"
       ]
 
       connect {

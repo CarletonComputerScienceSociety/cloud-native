@@ -67,7 +67,6 @@ job "merged-staging" {
         "traefik.http.routers.merged-django-staging.rule=Host(`api.merged.staging.discretemath.ca`)",
         "traefik.http.routers.merged-django-staging.entrypoints=https",
         "traefik.http.routers.merged-django-staging.tls.certresolver=letsencrypt",
-        "traefik.consulcatalog.connect=true"
       ]
 
       // check {
