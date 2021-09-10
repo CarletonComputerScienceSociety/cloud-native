@@ -61,22 +61,22 @@ job "shynet" {
         POSTGRES_DB       = "shynet_db"
 
         ALLOWED_HOSTS                         = "shynet.carletoncomputersciencesociety.ca, localhost"
-        ACCOUNT_SIGNUPS_ENABLED               = False
+        ACCOUNT_SIGNUPS_ENABLED               = "False"
         ACCOUNT_EMAIL_VERIFICATION            = "none"
         TIME_ZONE                             = "America/New_York"
-        SCRIPT_USE_HTTPS                      = True
+        SCRIPT_USE_HTTPS                      = "True"
         SCRIPT_HEARTBEAT_FREQUENCY            = 5000
         SESSION_MEMORY_TIMEOUT                = 1800
-        ONLY_SUPERUSERS_CREATE                = True
-        PERFORM_CHECKS_AND_SETUP              = True
+        ONLY_SUPERUSERS_CREATE                = "True"
+        PERFORM_CHECKS_AND_SETUP              = "True"
         PORT                                  = 8080
-        SHOW_SHYNET_VERSION                   = True
-        SHOW_THIRD_PARTY_ICONS                = True
-        BLOCK_ALL_IPS                         = False
-        AGGRESSIVE_HASH_SALTING               = True
+        SHOW_SHYNET_VERSION                   = "True"
+        SHOW_THIRD_PARTY_ICONS                = "True"
+        BLOCK_ALL_IPS                         = "False"
+        AGGRESSIVE_HASH_SALTING               = "True"
         LOCATION_URL                          = "https://www.openstreetmap.org/?mlat=$LATITUDE&mlon=$LONGITUDE"
         DASHBOARD_PAGE_SIZE                   = 10
-        USE_RELATIVE_MAX_IN_BAR_VISUALIZATION = True
+        USE_RELATIVE_MAX_IN_BAR_VISUALIZATION = "True"
         SHYNET_HOST                           = "shynet.carletoncomputersciencesociety.ca"
       }
 
