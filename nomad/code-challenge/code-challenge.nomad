@@ -69,7 +69,7 @@ job "code-challenge" {
 
     service {
       name = "code-project-django"
-      port = "8000"
+      port = "django"
 
       tags = [
         "traefik.enable=true",
@@ -97,7 +97,9 @@ job "code-challenge" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/carletoncomputersciencesociety/core/code-challenge-django:latest"
+        image      = "ghcr.io/carletoncomputersciencesociety/core/code-challenge-django:latest"
+        ports      = ["django"]
+        entrypoint = ["/code/docker/start-prod.sh"]
       }
 
       resources {
@@ -139,12 +141,13 @@ job "code-challenge" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/carletoncomputersciencesociety/core/code-challenge-django:latest"
+        image      = "ghcr.io/carletoncomputersciencesociety/core/code-challenge-django:latest"
+        entrypoint = ["/code/docker/start-celery-prod.sh"]
       }
 
       resources {
         cpu    = 1024
-        memory = 1024
+        memory = 2048
       }
     }
   }
@@ -152,21 +155,17 @@ job "code-challenge" {
   group "database" {
     network {
       mode = "bridge"
-
-      port "postgres" {
-        to = 5432
-      }
     }
 
-    // volume "code-challenge-postgres" {
-    //   type      = "host"
-    //   read_only = false
-    //   source    = "code-challenge-postgres"
-    // }
+    volume "code-challenge-postgres" {
+      type      = "host"
+      read_only = false
+      source    = "code-challenge-postgres"
+    }
 
     service {
       name = "code-challenge-postgres"
-      port = "postgres"
+      port = "5432"
 
       connect {
         sidecar_service {}
@@ -176,11 +175,11 @@ job "code-challenge" {
     task "postgres" {
       driver = "docker"
 
-      // volume_mount {
-      //   volume      = "code-challenge-postgres"
-      //   destination = "/var/lib/postgresql/data"
-      //   read_only   = false
-      // }
+      volume_mount {
+        volume      = "code-challenge-postgres"
+        destination = "/var/lib/postgresql/data"
+        read_only   = false
+      }
 
       config {
         image = "postgres:13"
@@ -189,7 +188,7 @@ job "code-challenge" {
       env {
         POSTGRES_USER     = "postgres"
         POSTGRES_PASSWORD = "1234"
-        POSTGRES_DB       = "code-project"
+        POSTGRES_DB       = "code_project"
         PGDATA            = "/var/lib/postgresql/data/pgdata"
       }
 

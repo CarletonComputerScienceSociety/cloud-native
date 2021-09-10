@@ -49,8 +49,6 @@ job "shynet" {
         ports = ["shynet"]
       }
 
-      // user = "a
-
       env {
         # https://github.com/milesmcc/shynet/blob/master/TEMPLATE.env
         DB_HOST           = "localhost"
@@ -90,6 +88,10 @@ job "shynet" {
   group "database" {
     network {
       mode = "bridge"
+
+      port "postgres" {
+        to = 5432
+      }
     }
 
     volume "shynet-postgres" {
@@ -100,7 +102,7 @@ job "shynet" {
 
     service {
       name = "shynet-postgres"
-      port = "5432"
+      port = "postgres"
 
       connect {
         sidecar_service {}
