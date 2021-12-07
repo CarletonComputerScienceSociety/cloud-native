@@ -4,4 +4,4 @@ ansible_user='student'
 ansible_python_interpreter='/usr/bin/env python3'
 
 [server]
-192.168.30.209 hostname="nomad-client-3"
+192.168.30.209 hostname="nomad-client-3" type="client"

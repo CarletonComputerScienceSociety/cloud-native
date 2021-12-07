@@ -1,0 +1,56 @@
+---
+# This job is used to create a base VM image for the CCSS infrastructure to use.
+# The main points are:
+# 
+# - Update all packages
+# - Install SSH Keys
+# - Install Cockpit
+# - TODO: Update netplan
+
+
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+    - name: Update apt repo and cache on all Debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+    - name: Upgrade all packages on servers
+      apt: upgrade=dist force_apt_get=yes
+
+    - name: Install Cockpit
+      apt: name=cockpit state=present
+
+    - name: Check if a reboot is needed on all servers
+      register: reboot_required_file
+      stat: path=/var/run/reboot-required get_md5=no
+
+    - name: Reboot the box if kernel updated
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+
+- name: Add ssh keys
+  hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Download ssh keys
+    shell: |
+      curl https://github.com/angelonfira.keys > ~/.ssh/authorized_keys
+
+  - name: Disable root login over SSH
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+    notify:
+      - restart sshd
+
+  - name: Disable password login
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+    notify:
+      - restart sshd
+

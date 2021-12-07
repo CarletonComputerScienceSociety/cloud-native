@@ -1,4 +1,4 @@
-name = "nomad_client_1"
+name = "{{ hostname }}"
 
 region = "global"
 

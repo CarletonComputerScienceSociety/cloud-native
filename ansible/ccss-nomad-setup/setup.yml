@@ -1,0 +1,183 @@
+---
+# This job is used to install everything the CCSS Nomad cluster needs.
+# The main points are:
+# 
+# - Update all packages
+# - Fix hostname
+# - Reboot
+# - Install Nomad/Consul
+# - TODO: Configure Nomad
+#   - Set up config
+#   - Set up service
+# - TODO: Configure Consul
+#   - Set up config
+#   - Set up service
+
+# - hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#     - name: Update apt repo and cache on all Debian/Ubuntu boxes
+#       apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+#     - name: Upgrade all packages on servers
+#       apt: upgrade=dist force_apt_get=yes
+
+#     - name: Check if a reboot is needed on all servers
+#       register: reboot_required_file
+#       stat: path=/var/run/reboot-required get_md5=no
+
+# - hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#   - name: Set a hostname
+#     ansible.builtin.hostname:
+#       name: "{{ hostname }}"
+
+# # Reboot
+# - hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#     - name: Reboot the box
+#       reboot:
+#         msg: "Reboot initiated by Ansible"
+#         connect_timeout: 5
+#         reboot_timeout: 300
+#         pre_reboot_delay: 0
+#         post_reboot_delay: 30
+#         test_command: uptime
+
+# - hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#   - name: Check sizes
+#     command: df /
+#     register: df
+
+#   - debug: msg="{{ df.stdout }}"
+
+# - hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#   - name: Expand partition
+#     command: /home/student/extend-lvm/extend-lvm.sh /dev/vda
+
+# - hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#   - name: Check sizes
+#     command: df /
+#     register: df
+
+#   - debug: msg="{{ df.stdout }}"
+
+# - name: Install Docker
+#   hosts: server
+#   become: yes
+#   remote_user: student
+#   roles:
+#     - role: geerlingguy.docker
+
+# - name: Install HashiStack
+#   hosts: server
+#   become: yes
+#   remote_user: student
+#   tasks:
+#     - name: Add repo
+#       shell: |
+#         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+#         apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+#     - name: Update apt repo and cache on all Debian/Ubuntu boxes
+#       apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+#     - name: Install Nomad
+#       apt: name=nomad state=present
+
+#     - name: Install Consul
+#       apt: name=consul state=present
+
+- name: Configure Nomad
+  hosts: server
+  become: yes
+  remote_user: student
+  tasks:
+    - name: Remove default Nomad config
+      ansible.builtin.file:
+        path: /etc/nomad.d
+        state: absent
+
+    - name: Create Nomad config
+      ansible.builtin.file:
+        path: /etc/nomad.d
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: "0755"
+
+    - name: Add Nomad base config
+      ansible.builtin.template:
+        src: configs/nomad/nomad-base.hcl
+        dest: /etc/nomad.d/nomad-base.hcl
+        owner: nomad
+        group: nomad
+        mode: '0644'
+
+    - name: Add Nomad server config
+      ansible.builtin.template:
+        src: configs/nomad/nomad-server.hcl
+        dest: /etc/nomad.d/nomad-server.hcl
+        owner: nomad
+        group: nomad
+        mode: '0644'
+      when: type == "server"
+
+    - name: Add Nomad client config
+      ansible.builtin.template:
+        src: configs/nomad/nomad-client.hcl
+        dest: /etc/nomad.d/nomad-client.hcl
+        owner: nomad
+        group: nomad
+        mode: '0644'
+      when: type == "client"
+
+# - name: Installing Nomad Consul Connect
+#   hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#   - name: Download Consul Connect plugin
+#     shell: |
+#       curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz;
+#       mkdir -p /opt/cni/bin;
+#       tar -C /opt/cni/bin -xzf cni-plugins.tgz;
+#       echo 1 > /proc/sys/net/bridge/bridge-nf-call-arptables;
+#       echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables;
+#       echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables;
+#       echo net.bridge.bridge-nf-call-arptables = 1 > /etc/sysctl.d/10-nomad-consul-connect.conf;
+#       echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+#       echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+
+# - name: Add ssh keys
+#   hosts: server
+#   remote_user: student
+#   become: true
+#   tasks:
+#   - name: Download ssh keys
+#     shell: |
+#       curl https://github.com/angelonfira.keys > ~/.ssh/authorized_keys
+
+#   - name: Disable root login over SSH
+#     lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+#     notify:
+#       - restart sshd
+
+#   - name: Disable password login
+#     lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+#     notify:
+#       - restart sshd
