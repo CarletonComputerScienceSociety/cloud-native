@@ -1,0 +1,152 @@
+---
+- hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+    - name: Update apt repo and cache on all Debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+    - name: Upgrade all packages on servers
+      apt: upgrade=dist force_apt_get=yes
+
+    - name: Check if a reboot is needed on all servers
+      register: reboot_required_file
+      stat: path=/var/run/reboot-required get_md5=no
+
+    - name: Reboot the box if kernel updated
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+
+- hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+  - name: Check sizes
+    command: df /
+    register: df
+
+  - debug: msg="{{ df.stdout }}"
+
+- hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+  - name: Expand partition
+    command: /home/student/extend-lvm/extend-lvm.sh /dev/vda
+
+- hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+  - name: Check sizes
+    command: df /
+    register: df
+
+  - debug: msg="{{ df.stdout }}"
+
+- name: Install Docker
+  hosts: servers
+  become: yes
+  remote_user: student
+  roles:
+    - role: geerlingguy.docker
+
+- name: Assemble Consul cluster
+  hosts: consul_instances
+  any_errors_fatal: true
+  remote_user: student
+  become: true
+  roles:
+    - ansible-consul
+  vars:
+    consul_version: 1.10.0
+    consul_datacenter: scs
+    consul_acl_datacenter: scs
+    # Consul connect
+    consul_connect_enabled: true
+    consul_ports_grpc: 8502
+
+- name: Assemble Vault cluster
+  hosts: vault_instances
+  any_errors_fatal: true
+  remote_user: student
+  become: true
+  roles:
+    - ansible-community.ansible-vault
+  vars:
+    vault_version: 1.7.2
+    vault_cluster_name: scs
+    vault_datacenter: scs
+    vault_backend: consul
+
+
+- name: Installing Nomad
+  hosts: nomad_instances
+  remote_user: student
+  become: true
+  roles:
+    - ansible-nomad
+  vars:
+    nomad_encrypt_enable: true
+    nomad_version: 1.1.0
+    nomad_use_consul: true
+    nomad_datacenter: scs
+    nomad_bind_address: 0.0.0.0
+    nomad_docker_enable: true
+    nomad_bootstrap_expect: 3
+  tasks:
+    - name: Start nomad
+      service: name=nomad state=started enabled=yes
+
+- name: Installing Nomad Consul Connect
+  hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+  - name: Download Consul Connect plugin
+    shell: |
+      curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz;
+      mkdir -p /opt/cni/bin;
+      tar -C /opt/cni/bin -xzf cni-plugins.tgz;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-arptables;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables;
+      echo net.bridge.bridge-nf-call-arptables = 1 > /etc/sysctl.d/10-nomad-consul-connect.conf;
+      echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+      echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+
+- name: Add ssh keys
+  hosts: servers
+  remote_user: student
+  become: true
+  tasks:
+  - name: Download ssh keys
+    shell: |
+      curl https://github.com/angelonfira.keys > ~/.ssh/authorized_keys
+
+  - name: Disable root login over SSH
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+    notify:
+      - restart sshd
+
+  - name: Disable password login
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+    notify:
+      - restart sshd
+
+# - hosts: all
+#   remote_user: student
+#   become: true
+  
+#   tasks:
+#     - name: Change user password
+#       user:
+#         name: student
+#         update_password: always
+#         password: "{{ 'newpassword'|password_hash('sha512') }}"

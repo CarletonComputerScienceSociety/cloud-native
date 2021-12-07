@@ -57,67 +57,24 @@
   roles:
     - role: geerlingguy.docker
 
-- name: Assemble Consul cluster
-  hosts: consul_instances
-  any_errors_fatal: true
+- name: Install HashiStack
+  hosts: servers
+  become: yes
   remote_user: student
-  become: true
-  roles:
-    - ansible-consul
-  vars:
-    consul_version: 1.10.1
-    consul_datacenter: scs
-    consul_acl_datacenter: scs
-    # Consul connect
-    consul_connect_enabled: true
-    consul_ports_grpc: 8502
-    consul_servers:
-      - "192.168.30.45"
-    #   - "192.168.30.42"
-    #   - "192.168.30.92"
-    # consul_bootstrap_expect: true
-    # consul_gather_server_facts: true
-
-- name: Assemble Vault cluster
-  hosts: vault_instances
-  any_errors_fatal: true
-  remote_user: student
-  become: true
-  roles:
-    - ansible-community.ansible-vault
-  vars:
-    vault_version: 1.8.2
-    vault_cluster_name: scs
-    vault_datacenter: scs
-    vault_backend: consul
-    vault_listener_localhost_enable: true
-
-
-- name: Installing Nomad
-  hosts: nomad_instances
-  remote_user: student
-  become: true
-  roles:
-    - ansible-nomad
-  vars:
-    nomad_encrypt_enable: true
-    nomad_version: 1.1.4
-    nomad_use_consul: true
-    nomad_datacenter: scs
-    nomad_bind_address: 0.0.0.0
-    nomad_docker_enable: true
-    nomad_bootstrap_expect: 3
-    nomad_telemetry_prometheus_metrics: true
-    nomad_raft_protocol: 3
-    nomad_autopilot: true
-    nomad_vault_enabled: no
-    nomad_vault_address: "192.168.30.45"
-    nomad_authoritative_region: scs
-    nomad_acl_enabled: yes
-
   tasks:
-    - name: Start nomad
-      service: name=nomad state=started enabled=yes
+    - name: Add repo
+      shell: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+    - name: Update apt repo and cache on all Debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+    - name: Install Nomad
+      apt: name=nomad state=present
+
+    - name: Install Consul
+      apt: name=consul state=present
 
 - name: Installing Nomad Consul Connect
   hosts: servers
@@ -144,22 +101,16 @@
   - name: Download ssh keys
     shell: |
       curl https://github.com/angelonfira.keys > ~/.ssh/authorized_keys
-      curl "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBcsOwoeC20v5Qk46LRb96wv9L2Ra0qD1oyYtciJQIId student@compxxxx" >> ~/.ssh/authorized_keys
-      echo "Include /etc/ssh/sshd_config.d/*.conf" > /etc/ssh/sshd_config
-      echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
-      echo "ChallengeResponseAuthentication no" >> /etc/ssh/sshd_config
-      echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-      echo "UsePAM yes" >> /etc/ssh/sshd_config
-      echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
-      echo "AcceptEnv LANG LC_*" >> /etc/ssh/sshd_config
+
+  - name: Disable root login over SSH
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
     notify:
       - restart sshd
 
-  handlers:
-  - name: restart sshd
-    service:
-      name: sshd
-      state: restarted
+  - name: Disable password login
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+    notify:
+      - restart sshd
 
 # - hosts: all
 #   remote_user: student
