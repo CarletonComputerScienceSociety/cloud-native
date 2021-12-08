@@ -11,9 +11,9 @@ disable_update_check = false
 bind_addr = "0.0.0.0"
 
 advertise {
-  http = "192.168.30.120:4646"
-  rpc  = "192.168.30.120:4647"
-  serf = "192.168.30.120:4648"
+  http = "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:4646"
+  rpc  = "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:4647"
+  serf = "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:4648"
 }
 
 ports {

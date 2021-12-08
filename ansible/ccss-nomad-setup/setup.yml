@@ -1,7 +1,7 @@
 ---
 # This job is used to install everything the CCSS Nomad cluster needs.
 # The main points are:
-# 
+#
 # - Update all packages
 # - Fix hostname
 # - Reboot
@@ -13,99 +13,105 @@
 #   - Set up config
 #   - Set up service
 
-# - hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#     - name: Update apt repo and cache on all Debian/Ubuntu boxes
-#       apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+    - name: Update apt repo and cache on all Debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
 
-#     - name: Upgrade all packages on servers
-#       apt: upgrade=dist force_apt_get=yes
+    - name: Upgrade all packages on servers
+      apt: upgrade=dist force_apt_get=yes
 
-#     - name: Check if a reboot is needed on all servers
-#       register: reboot_required_file
-#       stat: path=/var/run/reboot-required get_md5=no
+    - name: Check if a reboot is needed on all servers
+      register: reboot_required_file
+      stat: path=/var/run/reboot-required get_md5=no
 
-# - hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#   - name: Set a hostname
-#     ansible.builtin.hostname:
-#       name: "{{ hostname }}"
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Set a hostname
+    ansible.builtin.hostname:
+      name: "{{ hostname }}"
 
-# # Reboot
-# - hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#     - name: Reboot the box
-#       reboot:
-#         msg: "Reboot initiated by Ansible"
-#         connect_timeout: 5
-#         reboot_timeout: 300
-#         pre_reboot_delay: 0
-#         post_reboot_delay: 30
-#         test_command: uptime
+# Reboot
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+    - name: Reboot the box
+      reboot:
+        msg: "Reboot initiated by Ansible"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
 
-# - hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#   - name: Check sizes
-#     command: df /
-#     register: df
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Check sizes
+    command: df /
+    register: df
 
-#   - debug: msg="{{ df.stdout }}"
+  - debug: msg="{{ df.stdout }}"
 
-# - hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#   - name: Expand partition
-#     command: /home/student/extend-lvm/extend-lvm.sh /dev/vda
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Expand partition
+    command: /home/student/extend-lvm/extend-lvm.sh /dev/vda
 
-# - hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#   - name: Check sizes
-#     command: df /
-#     register: df
+- hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Check sizes
+    command: df /
+    register: df
 
-#   - debug: msg="{{ df.stdout }}"
+  - debug: msg="{{ df.stdout }}"
 
-# - name: Install Docker
-#   hosts: server
-#   become: yes
-#   remote_user: student
-#   roles:
-#     - role: geerlingguy.docker
+- name: Install Docker
+  hosts: server
+  become: yes
+  remote_user: student
+  roles:
+    - role: geerlingguy.docker
 
-# - name: Install HashiStack
-#   hosts: server
-#   become: yes
-#   remote_user: student
-#   tasks:
-#     - name: Add repo
-#       shell: |
-#         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-#         apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+- name: Install HashiStack
+  hosts: server
+  become: yes
+  remote_user: student
+  tasks:
+    - name: Add repo
+      shell: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 
-#     - name: Update apt repo and cache on all Debian/Ubuntu boxes
-#       apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+    - name: Update apt repo and cache on all Debian/Ubuntu boxes
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
 
-#     - name: Install Nomad
-#       apt: name=nomad state=present
+    - name: Install Nomad
+      apt: name=nomad state=present
 
-#     - name: Install Consul
-#       apt: name=consul state=present
+    - name: Install Consul
+      apt: name=consul state=present
 
 - name: Configure Nomad
   hosts: server
   become: yes
   remote_user: student
+  vars_prompt:
+  - name: nomad_encrypt_key
+    prompt: "Insert Nomad server encryption key"
+    # Only validate base64
+    validate: "^[a-zA-Z0-9_-=]{44}$"
+    when: type == "server"
   tasks:
     - name: Remove default Nomad config
       ansible.builtin.file:
@@ -126,7 +132,7 @@
         dest: /etc/nomad.d/nomad-base.hcl
         owner: nomad
         group: nomad
-        mode: '0644'
+        mode: "0644"
 
     - name: Add Nomad server config
       ansible.builtin.template:
@@ -134,7 +140,7 @@
         dest: /etc/nomad.d/nomad-server.hcl
         owner: nomad
         group: nomad
-        mode: '0644'
+        mode: "0644"
       when: type == "server"
 
     - name: Add Nomad client config
@@ -143,9 +149,117 @@
         dest: /etc/nomad.d/nomad-client.hcl
         owner: nomad
         group: nomad
-        mode: '0644'
+        mode: "0644"
       when: type == "client"
 
+    - name: Add Nomad service
+      ansible.builtin.template:
+        src: configs/nomad/nomad.service
+        dest: /lib/systemd/system/nomad.service
+        owner: root
+        group: root
+        mode: "0644"
+
+- name: Configure Consul
+  hosts: server
+  become: yes
+  remote_user: student
+  vars_prompt:
+  - name: consul_encrypt_key
+    prompt: "Insert Consul encryption key"
+    # Only validate base64
+    validate: "^[a-zA-Z0-9_-=]{44}$"
+  tasks:
+    - name: Remove default Consul config
+      ansible.builtin.file:
+        path: /etc/consul.d
+        state: absent
+
+    - name: Create Consul config
+      ansible.builtin.file:
+        path: /etc/consul.d
+        state: directory
+        owner: consul
+        group: consul
+        mode: "0755"
+
+    - name: Add Consul config
+      ansible.builtin.template:
+        src: configs/consul/consul-base.hcl
+        dest: /etc/consul.d/consul.hcl
+        owner: consul
+        group: consul
+        mode: "0644"
+
+    - name: Add Consul service
+      ansible.builtin.template:
+        src: configs/consul/consul.service
+        dest: /lib/systemd/system/consul.service
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Create Consul log directory
+      ansible.builtin.file:
+        path: /var/log/consul
+        state: directory
+        owner: consul
+        group: consul
+        mode: "0700"
+
+    - name: Create Consul var directory
+      ansible.builtin.file:
+        path: /var/consul
+        state: directory
+        owner: consul
+        group: consul
+        mode: "0700"
+
+- name: Set up config folder
+  hosts: server
+  become: yes
+  remote_user: student
+  tasks:
+    - name: Create config folder
+      ansible.builtin.file:
+        path: /home/student/config
+        state: directory
+        owner: student
+        group: student
+        mode: "0777"
+
+    - name: Create a symbolic link to the Nomad config
+      ansible.builtin.file:
+        src: /etc/nomad.d
+        dest: /home/student/config/nomad
+        owner: student
+        group: student
+        state: link
+
+    - name: Create a symbolic link to the Consul config
+      ansible.builtin.file:
+        src: /etc/consul.d
+        dest: /home/student/config/consul
+        owner: student
+        group: student
+        state: link
+
+- name: Start Services
+  hosts: server
+  become: yes
+  remote_user: student
+  tasks:
+    - name: Start Nomad
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: nomad
+
+    - name: Start Consul
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: consul
 # - name: Installing Nomad Consul Connect
 #   hosts: server
 #   remote_user: student
