@@ -14,6 +14,22 @@
 #   - Set up service
 
 - hosts: server
+  vars_prompt:
+  - name: nomad_encrypt_key
+    prompt: "Insert Nomad server encryption key"
+    # Only validate base64
+    validate: "^[a-zA-Z0-9_-=]{44}$"
+    when: type == "server"
+  - name: consul_encrypt_key
+    prompt: "Insert Consul encryption key"
+    # Only validate base64
+    validate: "^[a-zA-Z0-9_-=]{44}$"
+  tasks:
+    - set_fact:
+        consul_encrypt_key: "{{ consul_encrypt_key }}"
+        nomad_encrypt_key: "{{ nomad_encrypt_key }}"
+
+- hosts: server
   remote_user: student
   become: true
   tasks:
@@ -102,16 +118,27 @@
     - name: Install Consul
       apt: name=consul state=present
 
+- name: Stop Services
+  hosts: server
+  become: yes
+  remote_user: student
+  tasks:
+    - name: Start Nomad
+      ansible.builtin.systemd:
+        state: stopped
+        daemon_reload: yes
+        name: nomad
+
+    - name: Start Consul
+      ansible.builtin.systemd:
+        state: stopped
+        daemon_reload: yes
+        name: consul
+
 - name: Configure Nomad
   hosts: server
   become: yes
   remote_user: student
-  vars_prompt:
-  - name: nomad_encrypt_key
-    prompt: "Insert Nomad server encryption key"
-    # Only validate base64
-    validate: "^[a-zA-Z0-9_-=]{44}$"
-    when: type == "server"
   tasks:
     - name: Remove default Nomad config
       ansible.builtin.file:
@@ -164,11 +191,6 @@
   hosts: server
   become: yes
   remote_user: student
-  vars_prompt:
-  - name: consul_encrypt_key
-    prompt: "Insert Consul encryption key"
-    # Only validate base64
-    validate: "^[a-zA-Z0-9_-=]{44}$"
   tasks:
     - name: Remove default Consul config
       ansible.builtin.file:
@@ -260,38 +282,39 @@
         state: restarted
         daemon_reload: yes
         name: consul
-# - name: Installing Nomad Consul Connect
-#   hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#   - name: Download Consul Connect plugin
-#     shell: |
-#       curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz;
-#       mkdir -p /opt/cni/bin;
-#       tar -C /opt/cni/bin -xzf cni-plugins.tgz;
-#       echo 1 > /proc/sys/net/bridge/bridge-nf-call-arptables;
-#       echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables;
-#       echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables;
-#       echo net.bridge.bridge-nf-call-arptables = 1 > /etc/sysctl.d/10-nomad-consul-connect.conf;
-#       echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
-#       echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
 
-# - name: Add ssh keys
-#   hosts: server
-#   remote_user: student
-#   become: true
-#   tasks:
-#   - name: Download ssh keys
-#     shell: |
-#       curl https://github.com/angelonfira.keys > ~/.ssh/authorized_keys
+- name: Installing Nomad Consul Connect
+  hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Download Consul Connect plugin
+    shell: |
+      curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.9.1/cni-plugins-linux-amd64-v0.9.1.tgz;
+      mkdir -p /opt/cni/bin;
+      tar -C /opt/cni/bin -xzf cni-plugins.tgz;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-arptables;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-ip6tables;
+      echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables;
+      echo net.bridge.bridge-nf-call-arptables = 1 > /etc/sysctl.d/10-nomad-consul-connect.conf;
+      echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
+      echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.d/10-nomad-consul-connect.conf;
 
-#   - name: Disable root login over SSH
-#     lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
-#     notify:
-#       - restart sshd
+- name: Add ssh keys
+  hosts: server
+  remote_user: student
+  become: true
+  tasks:
+  - name: Download ssh keys
+    shell: |
+      curl https://github.com/angelonfira.keys > ~/.ssh/authorized_keys
 
-#   - name: Disable password login
-#     lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
-#     notify:
-#       - restart sshd
+  - name: Disable root login over SSH
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+    notify:
+      - restart sshd
+
+  - name: Disable password login
+    lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+    notify:
+      - restart sshd
