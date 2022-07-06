@@ -22,6 +22,7 @@ job "friend-zoner" {
       template {
         data = <<EOH
 DISCORD_TOKEN="{{ key "friend-zoner-discord-api-key" }}"
+APPLICATION_ID="{{ key "friend-zoner-applicaiton-id" }}"
 EOH
 
         destination = "secrets/file.env"
