@@ -1,10 +1,20 @@
-job "code-challenge" {
+job "code-challenge-no-connect" {
   datacenters = ["scs"]
 
-  group "client" {
+  group "code-challenge" {
     network {
+      mode = "bridge"
+
+      port "django" {
+        to = 8000
+      }
+
       port "svelte" {
         to = 5000
+      }
+
+      port "postgres" {
+        to = 5432
       }
     }
 
@@ -13,33 +23,26 @@ job "code-challenge" {
       delay    = "30s"
     }
 
-    service {
-      name = "code-project-svelte"
-      port = "svelte"
-
-      tags = [
-        "traefik.enable=true",
-        "traefik.http.routers.code-project-svelte.rule=Host(`code.carletoncomputersciencesociety.ca`)",
-        "traefik.http.routers.code-project-svelte.entrypoints=https",
-        "traefik.http.routers.code-project-svelte.tls.certresolver=letsencrypt"
-      ]
-
-      check {
-        type     = "http"
-        path     = "/"
-        interval = "5s"
-        timeout  = "2s"
-
-        check_restart {
-          limit           = 3
-          grace           = "10s"
-          ignore_warnings = true
-        }
-      }
+    volume "code-challenge-postgres" {
+      type      = "host"
+      read_only = false
+      source    = "code-challenge-postgres"
     }
 
-    task "svelte" {
+    task "frontend" {
       driver = "docker"
+
+      service {
+        name = "code-project-svelte"
+        port = "svelte"
+
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.svelte.rule=Host(`code.carletoncomputersciencesociety.ca`)",
+          "traefik.http.routers.svelte.entrypoints=https",
+          "traefik.http.routers.svelte.tls.certresolver=letsencrypt"
+        ]
+      }
 
       config {
         image = "ghcr.io/carletoncomputersciencesociety/code-project/code-challenge-svelte:latest"
@@ -51,49 +54,20 @@ job "code-challenge" {
         memory = 1024
       }
     }
-  }
 
-  group "backend" {
-    network {
-      mode = "bridge"
+    task "backend" {
+      service {
+        name = "code-project-django"
+        port = "django"
 
-      port "django" {
-        to = 8000
+        tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.django.rule=Host(`core.carletoncomputersciencesociety.ca`)",
+          "traefik.http.routers.django.entrypoints=https",
+          "traefik.http.routers.django.tls.certresolver=letsencrypt"
+        ]
       }
-    }
 
-    restart {
-      attempts = 3
-      delay    = "30s"
-    }
-
-    service {
-      name = "code-project-django"
-      port = "django"
-
-      tags = [
-        "traefik.enable=true",
-        "traefik.http.routers.code-challenge-django.rule=Host(`core.carletoncomputersciencesociety.ca`)",
-        "traefik.http.routers.code-challenge-django.entrypoints=https",
-        "traefik.http.routers.code-challenge-django.tls.certresolver=letsencrypt"
-      ]
-
-      connect {
-        sidecar_service {
-          proxy {
-            upstreams {
-              destination_name = "code-challenge-postgres"
-              local_bind_port  = 5432
-            }
-          }
-          tags = [
-            "dummy"
-          ]
-        }
-      }
-    }
-
-    task "django" {
       driver = "docker"
 
       config {
@@ -106,38 +80,17 @@ job "code-challenge" {
         cpu    = 2048
         memory = 1024
       }
-    }
-  }
 
-  group "celery" {
-    network {
-      mode = "bridge"
-    }
-
-    restart {
-      attempts = 3
-      delay    = "30s"
-    }
-
-    service {
-      name = "code-project-celery"
-
-      connect {
-        sidecar_service {
-          proxy {
-            upstreams {
-              destination_name = "code-challenge-postgres"
-              local_bind_port  = 5432
-            }
-          }
-          tags = [
-            "dummy"
-          ]
-        }
+      env {
+        POSTGRES_PORT = "${NOMAD_PORT_postgres}"
       }
     }
 
     task "celery" {
+      service {
+        name = "code-project-celery"
+      }
+
       driver = "docker"
 
       config {
@@ -149,30 +102,18 @@ job "code-challenge" {
         cpu    = 1024
         memory = 2048
       }
-    }
-  }
 
-  group "database" {
-    network {
-      mode = "bridge"
-    }
-
-    volume "code-challenge-postgres" {
-      type      = "host"
-      read_only = false
-      source    = "code-challenge-postgres"
-    }
-
-    service {
-      name = "code-challenge-postgres"
-      port = "5432"
-
-      connect {
-        sidecar_service {}
+      env {
+        POSTGRES_PORT = "${NOMAD_PORT_postgres}"
       }
     }
 
     task "postgres" {
+      service {
+        name = "code-challenge-postgres"
+        port = "postgres"
+      }
+
       driver = "docker"
 
       volume_mount {
@@ -183,6 +124,7 @@ job "code-challenge" {
 
       config {
         image = "postgres:13"
+        ports = ["postgres"]
       }
 
       env {
