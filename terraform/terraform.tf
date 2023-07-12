@@ -181,3 +181,14 @@ resource "aws_route53_record" "cuscheduling_discretemath_ca_record" {
 
   records = ["discretemath.ca"]
 }
+
+# Testing
+resource "aws_route53_record" "testing_discretemath_ca_record" {
+  zone_id         = aws_route53_zone.discretemath_ca.zone_id
+  name            = "testing.discretemath.ca"
+  type            = "CNAME"
+  ttl             = "300"
+  allow_overwrite = true
+
+  records = ["discretemath.ca"]
+}
