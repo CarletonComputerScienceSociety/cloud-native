@@ -160,3 +160,24 @@ resource "aws_route53_record" "console_minio_discretemath_ca_record" {
 
   records = ["discretemath.ca"]
 }
+
+resource "aws_route53_record" "shynet_discretemath_ca_record" {
+  zone_id         = aws_route53_zone.discretemath_ca.zone_id
+  name            = "shynet.discretemath.ca"
+  type            = "CNAME"
+  ttl             = "300"
+  allow_overwrite = true
+
+  records = ["discretemath.ca"]
+}
+
+# https://github.com/Eggo-Plant/cuScheduling
+resource "aws_route53_record" "cuscheduling_discretemath_ca_record" {
+  zone_id         = aws_route53_zone.discretemath_ca.zone_id
+  name            = "cuscheduling.discretemath.ca"
+  type            = "CNAME"
+  ttl             = "300"
+  allow_overwrite = true
+
+  records = ["discretemath.ca"]
+}
