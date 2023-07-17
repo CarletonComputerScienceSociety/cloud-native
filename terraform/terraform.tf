@@ -21,20 +21,6 @@ resource "aws_route53_zone" "discretemath_ca" {
   name = "discretemath.ca"
 }
 
-resource "aws_route53_record" "discretemath_ca_ns" {
-  zone_id = aws_route53_zone.discretemath_ca.zone_id
-  name    = "discretemath.ca"
-  type    = "NS"
-  ttl     = "300"
-
-  records = [
-    "ns-1821.awsdns-35.co.uk",
-    "ns-896.awsdns-48.net",
-    "ns-471.awsdns-58.com",
-    "ns-1515.awsdns-61.org",
-  ]
-}
-
 resource "aws_route53_record" "discretemath_ca_record" {
   zone_id         = aws_route53_zone.discretemath_ca.zone_id
   name            = "discretemath.ca"
